@@ -55,7 +55,7 @@ public class MockBudgetResourceIT {
 		//Stub getId
 		when(mockedResourceIT.identityResponse(mockedCreatedResponse)).thenReturn(mockedCreatedIdResponse);
 		when(mockedResourceIT.identityResponse(mockedCreatedResponse).getId()).thenReturn((long) 10);
-		long budgetId = mockedResourceIT.identityResponse(mockedCreatedResponse).getId();
+		long budgetId = mockedResourceIT.identityResponse(ResourceIT.post(path, addBudget)).getId();
 		
 		//Stub getLocation
 		when(mockedCreatedResponse.getLocation()).thenReturn(new URI("http://localhost:9999/api/budgets/10"));
@@ -79,8 +79,9 @@ public class MockBudgetResourceIT {
 		updateBudget.setProjected(100);
 		
 		//Stub readEntity
-		when(mockedUpdateResponse.readEntity(Budget.class)).thenReturn(updateBudget);
-		Budget updatedBudgetEntity = mockedUpdateResponse.readEntity(Budget.class);
+		when(ResourceIT.put(path + budgetId, updateBudgetForm).readEntity(Budget.class)).thenReturn(updateBudget);
+		
+		Budget updatedBudgetEntity = ResourceIT.put(path + budgetId, updateBudgetForm).readEntity(Budget.class);
 		
 		//Assertions
 		assertNotNull(mockedCreatedResponse.getLocation());
