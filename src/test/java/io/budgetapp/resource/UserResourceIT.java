@@ -17,8 +17,7 @@ import javax.ws.rs.core.Response;
 import java.util.Arrays;
 
 import static org.junit.Assert.*;
-import static org.hamcrest.CoreMatchers.*;
-import static org.hamcrest.MatcherAssert.assertThat;
+
 
 /**
  *
