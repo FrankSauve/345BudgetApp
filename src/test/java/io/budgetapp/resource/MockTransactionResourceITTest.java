@@ -16,8 +16,7 @@ import org.powermock.api.mockito.PowerMockito;
 
 import javax.ws.rs.core.Response;
 
-import io.budgetapp.modal.IdentityResponse;
-import io.budgetapp.model.Transaction;
+
 
 
 @RunWith(PowerMockRunner.class)
@@ -31,7 +30,7 @@ public class MockTransactionResourceITTest {
 	 *
 	 */
 	@Test
-	public void shouldNotAbleDeleteInvalidTransaction() throws URISyntaxException{
+	public void shouldNotAbleDeleteInvalidTransaction() {
 		
 		String path = "/api/transactions/"; 
 		
@@ -49,8 +48,10 @@ public class MockTransactionResourceITTest {
 		//Stub PUT request 
 		when(ResourceIT.delete(path + transactionId)).thenReturn(mockedDeleteResponse); 
 		
+		mockedResourceIT.assertNotFound(mockedDeleteResponse); 
+		
 		//Assertion 
-		assertThat(mockedDeleteResponse.getStatus(), is(Response.Status.NOT_FOUND.getStatusCode()));		
+		//assertThat(mockedDeleteResponse.getStatus(), is(Response.Status.NOT_FOUND.getStatusCode()));		
 	}
 
 }
