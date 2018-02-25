@@ -57,6 +57,7 @@ public class CategoryResourceIT extends ResourceIT {
 
         // then
         Response newReponse = get(response.getLocation().getPath());
+        System.out.println("RESPONSE:" + newReponse);
         assertOk(newReponse);
     }
 
