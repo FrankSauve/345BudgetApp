@@ -84,8 +84,8 @@ public class MockBudgetResourceIT {
 		
 		//Assertions
 		assertNotNull(mockedCreatedResponse.getLocation());
-		assertEquals("Test", updateBudget.getName());
-		assertEquals(100, updateBudget.getProjected(), 0.000);
+		assertEquals("Test", updatedBudgetEntity.getName());
+		assertEquals(100, updatedBudgetEntity.getProjected(), 0.000);
 	
 	}	
 }
