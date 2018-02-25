@@ -120,5 +120,23 @@ public class BudgetResourceIT extends ResourceIT {
         Response newReponse = delete(response.getLocation().getPath());
         assertBadRequest(newReponse);
     }
+    
+    @Test
+    public void shouldAbleDeleteBudgetWithoutChild() {
+
+        // given
+        AddBudgetForm addBudgetForm = new AddBudgetForm();
+        addBudgetForm.setName(randomAlphabets());
+        addBudgetForm.setCategoryId(1L);
+
+        // when
+        Response response = post(ResourceURL.BUDGET, addBudgetForm);
+        Budget budget = new Budget();
+        budget.setId(identityResponse(response).getId());
+
+        // then
+        Response newReponse = delete(response.getLocation().getPath());
+        assertDeleted(newReponse);
+    }
 
 }

@@ -81,4 +81,20 @@ public class CategoryResourceIT extends ResourceIT {
         Response newReponse = delete(response.getLocation().getPath());
         assertBadRequest(newReponse);
     }
+    
+    @Test
+    public void shouldAbleDeleteCategoryWithoutChild() {
+
+        // given
+        Category category = new Category();
+        category.setName(randomAlphabets());
+        category.setType(CategoryType.EXPENDITURE);
+
+        // when
+        Response response = post(ResourceURL.CATEGORY, category);
+
+        // then
+        Response newReponse = delete(response.getLocation().getPath());
+        assertDeleted(newReponse);
+    }
 }
