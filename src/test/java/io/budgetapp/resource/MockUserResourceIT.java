@@ -8,11 +8,16 @@ import static org.mockito.Mockito.when;
 import javax.ws.rs.core.Response;
 
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.powermock.api.mockito.PowerMockito;
+import org.powermock.core.classloader.annotations.PrepareForTest;
+import org.powermock.modules.junit4.PowerMockRunner;
 
 import io.budgetapp.modal.IdentityResponse;
 import io.budgetapp.model.form.SignUpForm;
 
+@RunWith(PowerMockRunner.class)
+@PrepareForTest(ResourceIT.class)
 public class MockUserResourceIT {
 
 	@Test
