@@ -38,6 +38,8 @@ public class UserDAO extends AbstractDAO<User> {
         user.setUsername(signUp.getUsername());
         user.setPassword(signUp.getPassword());
         user = persist(user);
+        System.out.println("USERNAME HERE: " + signUp.getUsername());
+        System.out.println("PASSWORD HERE: " + signUp.getPassword());
         return user;
     }
 

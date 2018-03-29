@@ -5,19 +5,20 @@ database:
   driverClass: ${DB_DRIVER:-com.mysql.jdbc.Driver}
 
   # the username
-  user: ${DB_USERNAME:-b023819cf46906}
+  user: ${DB_USERNAME:-root}
 
   # the password
-  password: ${DB_PASSWORD:-b5fb1f19}
+  password: ${DB_PASSWORD:-root}
 
   # the JDBC URL
-  url: ${DB_URL:-jdbc:mysql://us-cdbr-iron-east-05.cleardb.net/heroku_ae343752fb7d058}
+  url: ${DB_URL:-jdbc:mysql://localhost:3306/345BudgetApp?createDatabaseIfNotExist=true}
 
   # any properties specific to JDBC driver:
   properties:
     charSet: UTF-8
     hibernate.dialect: ${DB_DIALECT:-org.hibernate.dialect.MySQLDialect}
     hibernate.format_sql: true
+    hibernate.show_sql: true
 
   validationQuery: ${DB_VALIDATE_QUERY:-SELECT 1}
 
