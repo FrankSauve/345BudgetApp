@@ -48,6 +48,19 @@ public class UserResource extends AbstractResource {
         User user = financeService.addUser(signUp);
         return created(user, user.getId());
     }
+    
+    @GET
+    @UnitOfWork
+    @Path("/generate")
+    public Response generate() {
+    	SignUpForm signUp = new SignUpForm();
+    	for(int i = 0; i < 100; i++) {
+    		signUp.setPassword("password" + i);
+    		signUp.setUsername("username" + i);
+    		financeService.addUser(signUp);
+    	}
+    	return ok();
+    }
 
     @PUT
     @UnitOfWork
