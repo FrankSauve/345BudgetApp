@@ -9,7 +9,7 @@ database:
 #  user: ${DB_USERNAME:-root}
 #
 #  # the password
-#  password: ${DB_PASSWORD:-}
+#  password: ${DB_PASSWORD:-root}
 #
 #  # the JDBC URL
 #  url: ${DB_URL:-jdbc:mysql://localhost:3306/345BudgetApp?createDatabaseIfNotExist=true}
