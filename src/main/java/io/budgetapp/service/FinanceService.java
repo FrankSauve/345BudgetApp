@@ -90,6 +90,20 @@ public class FinanceService {
         initCategoriesAndBudgets(user, now.getMonthValue(), now.getYear());
         return user;
     }
+    
+    public User addDummyUser(SignUpForm signUp, String name) {
+        Optional<User> optional = userDAO.findByUsername(signUp.getUsername());
+        if(optional.isPresent()) {
+            throw new DataConstraintException("username", "Username already taken.");
+        }
+        signUp.setPassword(passwordEncoder.encode(signUp.getPassword()));
+        User user = userDAO.add(signUp);
+        user.setName(name);
+        LocalDate now = LocalDate.now();
+        // init account
+        initCategoriesAndBudgets(user, now.getMonthValue(), now.getYear());
+        return user;
+    }
 
     public User update(User user, Profile profile) {
         user.setName(profile.getName());

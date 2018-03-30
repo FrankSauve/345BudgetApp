@@ -22,6 +22,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.util.Optional;
+import com.github.javafaker.Faker;
 
 /**
  *
@@ -53,11 +54,22 @@ public class UserResource extends AbstractResource {
     @UnitOfWork
     @Path("/generate")
     public Response generate() {
+    	
+    	Faker faker = new Faker();
     	SignUpForm signUp = new SignUpForm();
     	for(int i = 0; i < 100; i++) {
-    		signUp.setPassword("password" + i);
-    		signUp.setUsername("username" + i);
-    		financeService.addUser(signUp);
+    		String firstName = faker.name().firstName();
+    		String lastName = faker.name().lastName();
+    		String name = firstName + " " + lastName;
+    		
+    		String emailAddress = faker.internet().emailAddress(firstName + "." + lastName);
+    		String password = faker.internet().password();
+    		
+    		
+    		signUp.setUsername(emailAddress);
+    		signUp.setPassword(password);
+    		
+    		financeService.addDummyUser(signUp, name);
     	}
     	return ok();
     }
