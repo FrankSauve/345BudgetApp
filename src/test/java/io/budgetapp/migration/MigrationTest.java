@@ -4,6 +4,7 @@ import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.ResultSet;
@@ -62,7 +63,14 @@ public class MigrationTest{
 				preparedStmt.setString(5, currency);
 
 
-				preparedStmt.execute();
+				try {
+					preparedStmt.execute();
+				}
+				catch (SQLIntegrityConstraintViolationException  e) {
+					System.out.println();
+					System.out.println("username " + username + " already exists");
+					System.out.println();
+				}
 			}
 
 			conMySQL.close();
