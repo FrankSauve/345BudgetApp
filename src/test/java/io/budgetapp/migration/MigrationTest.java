@@ -397,7 +397,146 @@ public class MigrationTest{
 		LOGGER.info("**************Forklift Deactive***************");
 		LOGGER.info("**************Transfer Stopped****************");
 	}
+	
+	/**
+	 * Compares the contents of the transaction tables
+	 */
+	public void checkTransactions(){
+		try {
+			Connection conPostgres =  DriverManager.getConnection(host1,username1,password1);
+			Connection conMySQL = DriverManager.getConnection(host2,username2,password2);
 
+			Statement stmtPostgres = conPostgres.createStatement( );
+			ResultSet resultPostgres = stmtPostgres.executeQuery("SELECT * FROM transactions");
+			
+			Statement stmtMySQL = conMySQL.createStatement( );
+			ResultSet resultMySQL = stmtMySQL.executeQuery("SELECT * FROM transactions");
+			
+			
+			while(resultPostgres.next()) {
+				
+				//local variable so that objects may be passed properly
+				int timeStampUpdateIndicator=0;
+				
+				// Getting values from the old database (Postgres)
+				int id_Postgres = resultPostgres.getInt("id");
+				String name_Postgres = resultPostgres.getString("name");
+				double amount_Postgres = resultPostgres.getDouble("amount");
+				String remark_Postgres = resultPostgres.getString("remark");
+				boolean auto_Postgres = resultPostgres.getBoolean("auto");
+				Timestamp transactionOn_Postgres = resultPostgres.getTimestamp("transaction_on");
+				Timestamp timeStamp_Postgres = resultPostgres.getTimestamp("created_at");
+				int budgetId_Postgres = resultPostgres.getInt("budget_id");
+				int recurringId_Postgres = resultPostgres.getInt("recurring_id");
+				
+				// Getting values from the new database (MySQL)
+				int id_MySQL = resultMySQL.getInt("id");
+				String name_MySQL = resultMySQL.getString("name");
+				double amount_MySQL = resultMySQL.getDouble("amount");
+				String remark_MySQL = resultMySQL.getString("remark");
+				boolean auto_MySQL = resultMySQL.getBoolean("auto");
+				Timestamp transactionOn_MySQL = resultMySQL.getTimestamp("transaction_on");
+				Timestamp timeStamp_MySQL = resultMySQL.getTimestamp("created_at");
+				int budgetId_MySQL = resultMySQL.getInt("budget_id");
+				int recurringId_MySQL = resultMySQL.getInt("recurring_id");
+				
+				// Disable foreign key checks
+				Statement disableFKChecks = conMySQL.createStatement();
+				disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
+
+				String query = "";
+				
+				// Comparing values
+				if(name_Postgres.equals(name_MySQL)){
+					LOGGER.debug("name inconsistency: expected '"+name_Postgres+"' but received '"+name_MySQL+"'");
+					query+= " UPDATE recurrings SET name = '"+name_Postgres+"' WHERE id = "+id_MySQL+";";
+				}
+				if(amount_Postgres == amount_MySQL){
+					LOGGER.debug("amount inconsistency: expected "+amount_Postgres+" but received "+amount_MySQL);
+					query+= " UPDATE recurrings SET amount = "+amount_Postgres+" WHERE id = "+id_MySQL+";";
+				}
+				if(remark_Postgres.equals(remark_MySQL)){
+					LOGGER.debug("remark inconsistency: expected '"+remark_Postgres+"' but received '"+remark_MySQL+"'");
+					query+= " UPDATE recurrings SET name = '"+remark_Postgres+"' WHERE id = "+id_MySQL+";";
+				}
+				if(auto_Postgres == auto_MySQL){
+					LOGGER.debug("auto inconsistency: expected "+auto_Postgres+" but received "+auto_MySQL);
+					query+= " UPDATE recurrings SET auto = "+auto_Postgres+" WHERE id = "+id_MySQL+";";
+				}
+				if(transactionOn_Postgres.equals(transactionOn_MySQL)){
+					LOGGER.debug("transaction_on inconsistency: expected "+transactionOn_Postgres.getTime()+" but received "+transactionOn_MySQL.getTime());
+					query+= " UPDATE recurrings SET transaction_on = ? WHERE id = "+id_MySQL+";";
+					timeStampUpdateIndicator = 2;
+				}
+				if(timeStamp_Postgres.equals(timeStamp_MySQL)){
+					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres+" but received "+timeStamp_MySQL);
+					query+= " UPDATE recurrings SET created_at = ? WHERE id = "+id_MySQL+";";
+					timeStampUpdateIndicator++;
+				}
+				if(budgetId_Postgres == budgetId_MySQL){
+					LOGGER.debug("budget_id inconsistency: expected "+budgetId_Postgres+" but received "+budgetId_MySQL);
+					query+= " UPDATE recurrings SET budget_id = "+budgetId_Postgres+" WHERE id = "+id_MySQL+";";
+				}
+				if(recurringId_Postgres == recurringId_MySQL){
+					LOGGER.debug("recurring_id inconsistency: expected "+recurringId_Postgres+" but received "+recurringId_MySQL);
+					query+= " UPDATE recurrings SET recurring_id = "+recurringId_Postgres+" WHERE id = "+id_MySQL+";";
+				}
+				
+				
+				// taking all of the MySQL queries and executing them
+				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
+				
+				//Adding in any timestamp variables which require modification
+				switch (timeStampUpdateIndicator){
+				case 0: break;
+				case 1: preparedStmt.setTimestamp(1, timeStamp_Postgres); break;
+				case 2: preparedStmt.setTimestamp(1, transactionOn_Postgres); break;
+				case 3:
+					preparedStmt.setTimestamp(1, transactionOn_Postgres);
+					preparedStmt.setTimestamp(2, timeStamp_Postgres);
+				}
+				
+				
+				try {
+					preparedStmt.execute();
+				}
+				catch (SQLIntegrityConstraintViolationException  e) {
+					LOGGER.error("transactions table checking failed");
+					e.printStackTrace();
+				}
+				
+				//Enable foreign key checks
+				Statement enableFKChecks = conMySQL.createStatement();
+				enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+				
+				timeStampUpdateIndicator = 0;
+			}
+			conMySQL.close();
+			conPostgres.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Compares all of the forklifted data and corrects any inconsistencies.
+	 */
+	public void checkAll(){
+		LOGGER.info("*********Checking Database Contents***********");
+//		LOGGER.info("***************Checking Users*****************");
+//		forkliftUsers();
+//		LOGGER.info("************Checking Budget Types*************");
+//		forkliftBudgetTypes();
+//		LOGGER.info("**************Checking Budgets****************");
+//		forkliftBudgets();
+//		LOGGER.info("*************Checking Categories**************");
+//		forkliftCategories();
+//		LOGGER.info("*************Checking Recurrings**************");
+//		forkliftRecurrings();
+		LOGGER.info("************Checking Transactions*************");
+		checkTransactions();
+		LOGGER.info("*********Database Checking Complete***********");
+	}
 
 	@Test
 	public void migrationTest() {
@@ -406,7 +545,7 @@ public class MigrationTest{
 		forklift();
 
 		// check for inconsistencies 
-
+		checkAll();
 		// ensure inconsistencies are fixed 
 
 		//shadow writes 
