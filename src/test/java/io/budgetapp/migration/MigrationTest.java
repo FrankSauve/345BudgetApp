@@ -8,12 +8,15 @@ import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.sql.Timestamp;
 import java.sql.ResultSet;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 
 
 public class MigrationTest{
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(MigrationTest.class);
+	
 	String host1 = "jdbc:postgresql://localhost:5432/345BudgetApp";
 	String username1 = "postgres";
 	String password1 = "postgres";
@@ -24,8 +27,8 @@ public class MigrationTest{
 
 	public void forklift() {
 
-		System.out.println("**************Forklift Active***************");
-		System.out.println("**************Tranferring Data***************");
+		LOGGER.info("**************Forklift Active***************");
+		LOGGER.info("**************Tranferring Data***************");
 		try {
 			Connection conPostgres =  DriverManager.getConnection(host1,username1,password1);
 			Connection conMySQL = DriverManager.getConnection(host2,username2,password2);
@@ -38,18 +41,18 @@ public class MigrationTest{
 
 				// Getting values from the old database (Postgres)
 				int id = result.getInt("id");
-				System.out.println("id: " + id);
+				LOGGER.debug("id: " + id);
 
 				String username= result.getString("username");
-				System.out.println("username: " + username);
+				LOGGER.debug("username: " + username);
 				String password = result.getString("password");
-				System.out.println("password: " + password);
+				LOGGER.debug("password: " + password);
 				String name = result.getString("name");
-				System.out.println("name: " + name);
+				LOGGER.debug("name: " + name);
 				Timestamp timeStamp = result.getTimestamp("created_at");
-				System.out.println("created_at" + timeStamp );
+				LOGGER.debug("created_at" + timeStamp );
 				String currency = result.getString("currency");
-				System.out.println("currency:" + currency);
+				LOGGER.debug("currency:" + currency);
 
 
 				// Copying data into new storage (MySQL)
@@ -67,9 +70,7 @@ public class MigrationTest{
 					preparedStmt.execute();
 				}
 				catch (SQLIntegrityConstraintViolationException  e) {
-					System.out.println();
-					System.out.println("username " + username + " already exists");
-					System.out.println();
+					LOGGER.error("username " + username + " already exists");
 				}
 			}
 
@@ -79,8 +80,8 @@ public class MigrationTest{
 			e.printStackTrace();
 
 		}
-		System.out.println("**************Forklift Deactive***************");
-		System.out.println("**************Tranfer Stopped****************");
+		LOGGER.info("**************Forklift Deactive***************");
+		LOGGER.info("**************Transfer Stopped****************");
 	}
 
 
