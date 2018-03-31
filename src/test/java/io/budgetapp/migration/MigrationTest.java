@@ -191,12 +191,71 @@ public class MigrationTest{
 		}
 	}
 	
+	/**
+	 * Migrate the categories table
+	 */
+	public void forkliftCategories() {
+		try {
+			Connection conPostgres =  DriverManager.getConnection(host1,username1,password1);
+			Connection conMySQL = DriverManager.getConnection(host2,username2,password2);
+
+			Statement stmtPostgres = conPostgres.createStatement( );
+			ResultSet result = stmtPostgres.executeQuery("SELECT * FROM categories");
+
+			while(result.next()) {
+
+				// Getting values from the old database (Postgres)
+				int id = result.getInt("id");
+				LOGGER.debug("id: " + id);
+
+				String name = result.getString("name");
+				LOGGER.debug("name: " + name);
+				String type = result.getString("type");
+				LOGGER.debug("type: " + type);
+				Timestamp timeStamp = result.getTimestamp("created_at");
+				LOGGER.debug("created_at" + timeStamp );
+				int userId = result.getInt("user_id");
+				LOGGER.debug("user_id" + userId);
+				
+				//Disable foreign key checks
+				Statement disableFKChecks = conMySQL.createStatement();
+				disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
+
+				// Copying data into new storage (MySQL)
+				String query = " INSERT INTO categories (name, type, created_at, user_id)"
+						+ " VALUES (?, ?, ?, ?)";
+				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
+				preparedStmt.setString(1, name);
+				preparedStmt.setString(2, type);
+				preparedStmt.setTimestamp(3, timeStamp);
+				preparedStmt.setInt(4, userId);
+
+				try {
+					preparedStmt.execute();
+				}
+				catch (SQLIntegrityConstraintViolationException  e) {
+					LOGGER.error("categories table migration failed");
+					e.printStackTrace();
+				}
+				
+				//Enable foreign key checks
+				Statement enableFKChecks = conMySQL.createStatement();
+				enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+			}
+			conMySQL.close();
+			conPostgres.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void forklift() {
 		LOGGER.info("**************Forklift Active***************");
 		LOGGER.info("**************Tranferring Data***************");
-		forkliftUsers();
-		forkliftBudgetTypes();
-		forkliftBudgets();
+//		forkliftUsers();
+//		forkliftBudgetTypes();
+//		forkliftBudgets();
+		forkliftCategories();
 		LOGGER.info("**************Forklift Deactive***************");
 		LOGGER.info("**************Transfer Stopped****************");
 	}
