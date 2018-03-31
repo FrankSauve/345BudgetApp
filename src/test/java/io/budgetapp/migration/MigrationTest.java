@@ -249,13 +249,77 @@ public class MigrationTest{
 		}
 	}
 	
+	/**
+	 * Migrate the recurrings tables
+	 */
+	public void forkliftRecurrings(){
+		try {
+			Connection conPostgres =  DriverManager.getConnection(host1,username1,password1);
+			Connection conMySQL = DriverManager.getConnection(host2,username2,password2);
+
+			Statement stmtPostgres = conPostgres.createStatement( );
+			ResultSet result = stmtPostgres.executeQuery("SELECT * FROM recurrings");
+
+			while(result.next()) {
+
+				// Getting values from the old database (Postgres)
+				int id = result.getInt("id");
+				LOGGER.debug("id: " + id);
+
+				double amount = result.getDouble("amount");
+				LOGGER.debug("amount: " + amount);
+				String type = result.getString("type");
+				LOGGER.debug("type: " + type);
+				Timestamp lastRun = result.getTimestamp("last_run");
+				LOGGER.debug("last_run" + lastRun );
+				Timestamp timeStamp = result.getTimestamp("created_at");
+				LOGGER.debug("created_at" + timeStamp );
+				int budgetTypeId = result.getInt("budget_type_id");
+				LOGGER.debug("budget_type_id" + budgetTypeId);
+				String remark = result.getString("remark");
+				LOGGER.debug("remark:" + remark);
+				
+				//Disable foreign key checks
+				Statement disableFKChecks = conMySQL.createStatement();
+				disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
+
+				// Copying data into new storage (MySQL)
+				String query = " INSERT INTO recurrings (amount, type, last_run, created_at, budget_type_id)"
+						+ " VALUES (?, ?, ?, ?, ?)";
+				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
+				preparedStmt.setDouble(1, amount);
+				preparedStmt.setString(2, type);
+				preparedStmt.setTimestamp(3, lastRun);
+				preparedStmt.setTimestamp(4, timeStamp);
+				preparedStmt.setInt(5, budgetTypeId);
+
+				try {
+					preparedStmt.execute();
+				}
+				catch (SQLIntegrityConstraintViolationException  e) {
+					LOGGER.error("recurrings table migration failed");
+					e.printStackTrace();
+				}
+				
+				//Enable foreign key checks
+				Statement enableFKChecks = conMySQL.createStatement();
+				enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+			}
+			conMySQL.close();
+			conPostgres.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
 	public void forklift() {
 		LOGGER.info("**************Forklift Active***************");
 		LOGGER.info("**************Tranferring Data***************");
 //		forkliftUsers();
 //		forkliftBudgetTypes();
 //		forkliftBudgets();
-		forkliftCategories();
+//		forkliftCategories();
+		forkliftRecurrings();
 		LOGGER.info("**************Forklift Deactive***************");
 		LOGGER.info("**************Transfer Stopped****************");
 	}
