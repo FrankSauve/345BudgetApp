@@ -312,6 +312,79 @@ public class MigrationTest{
 		}
 	}
 	
+	/**
+	 * Migrate the transactions table
+	 */
+	public void forkliftTransactions() {
+		try {
+			Connection conPostgres =  DriverManager.getConnection(host1,username1,password1);
+			Connection conMySQL = DriverManager.getConnection(host2,username2,password2);
+
+			Statement stmtPostgres = conPostgres.createStatement( );
+			ResultSet result = stmtPostgres.executeQuery("SELECT * FROM transactions");
+
+			while(result.next()) {
+
+				// Getting values from the old database (Postgres)
+				int id = result.getInt("id");
+				LOGGER.debug("id: " + id);
+				
+				String name = result.getString("name");
+				LOGGER.debug("name: " + name);
+				double amount = result.getDouble("amount");
+				LOGGER.debug("amount: " + amount);
+				String remark = result.getString("remark");
+				LOGGER.debug("remark:" + remark);
+				boolean auto = result.getBoolean("auto");
+				LOGGER.debug("auto:" + auto);
+				Timestamp transactionOn = result.getTimestamp("transaction_on");
+				LOGGER.debug("transaction_on" + transactionOn );
+				Timestamp timeStamp = result.getTimestamp("created_at");
+				LOGGER.debug("created_at" + timeStamp );
+				int budgetId = result.getInt("budget_id");
+				LOGGER.debug("budget_id:" + budgetId);
+				int recurringId = result.getInt("recurring_id");
+				LOGGER.debug("recurring_id:" + recurringId);
+				
+				//Disable foreign key checks
+				Statement disableFKChecks = conMySQL.createStatement();
+				disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
+
+				// Copying data into new storage (MySQL)
+				String query = " INSERT INTO recurrings (name, amount, remark, auto, transaction_on, created_at, budget_id, recurring_id)"
+						+ " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
+				preparedStmt.setString(1, name);
+				preparedStmt.setDouble(2, amount);
+				preparedStmt.setString(3, remark);
+				preparedStmt.setBoolean(4, auto);
+				preparedStmt.setTimestamp(5, transactionOn);
+				preparedStmt.setTimestamp(6, timeStamp);
+				preparedStmt.setInt(7, budgetId);
+				preparedStmt.setInt(8, recurringId);
+				
+				try {
+					preparedStmt.execute();
+				}
+				catch (SQLIntegrityConstraintViolationException  e) {
+					LOGGER.error("transactions table migration failed");
+					e.printStackTrace();
+				}
+				
+				//Enable foreign key checks
+				Statement enableFKChecks = conMySQL.createStatement();
+				enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+			}
+			conMySQL.close();
+			conPostgres.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	
+	/**
+	 * Migrate data from postgres to mysql
+	 */
 	public void forklift() {
 		LOGGER.info("**************Forklift Active***************");
 		LOGGER.info("**************Tranferring Data***************");
@@ -319,7 +392,8 @@ public class MigrationTest{
 //		forkliftBudgetTypes();
 //		forkliftBudgets();
 //		forkliftCategories();
-		forkliftRecurrings();
+//		forkliftRecurrings();
+		forkliftTransactions();
 		LOGGER.info("**************Forklift Deactive***************");
 		LOGGER.info("**************Transfer Stopped****************");
 	}
