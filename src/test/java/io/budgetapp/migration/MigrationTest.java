@@ -24,7 +24,7 @@ public class MigrationTest{
 
 	String host2 = "jdbc:mysql://localhost:3306/345BudgetApp";
 	String username2 = "root";
-	String password2 = "";
+	String password2 = "root";
 
 	/**
 	 * Migrates the user table
