@@ -399,6 +399,112 @@ public class MigrationTest{
 	}
 	
 	/**
+	 * Compares the contents of the recurring tables
+	 */
+	public void checkRecurrings(){
+		try {
+			Connection conPostgres =  DriverManager.getConnection(host1,username1,password1);
+			Connection conMySQL = DriverManager.getConnection(host2,username2,password2);
+
+			Statement stmtPostgres = conPostgres.createStatement( );
+			ResultSet resultPostgres = stmtPostgres.executeQuery("SELECT * FROM recurrings");
+			
+			Statement stmtMySQL = conMySQL.createStatement( );
+			ResultSet resultMySQL = stmtMySQL.executeQuery("SELECT * FROM recurrings");
+
+			while(resultPostgres.next()) {
+
+				//local variable so that Timestamp objects may be passed properly
+				int timeStampUpdateIndicator =0;
+				
+				// Getting values from the old database (Postgres)
+				int id_Postgres = resultPostgres.getInt("id");
+				double amount_Postgres = resultPostgres.getDouble("amount");
+				String type_Postgres = resultPostgres.getString("type");
+				Timestamp lastRun_Postgres = resultPostgres.getTimestamp("last_run");
+				Timestamp timeStamp_Postgres = resultPostgres.getTimestamp("created_at");
+				int budgetTypeId_Postgres = resultPostgres.getInt("budget_type_id");
+				String remark_Postgres = resultPostgres.getString("remark");
+				
+				// Getting values from the new database (MySQL)
+				int id_MySQL = resultPostgres.getInt("id");
+				double amount_MySQL = resultPostgres.getDouble("amount");
+				String type_MySQL = resultPostgres.getString("type");
+				Timestamp lastRun_MySQL = resultPostgres.getTimestamp("last_run");
+				Timestamp timeStamp_MySQL = resultPostgres.getTimestamp("created_at");
+				int budgetTypeId_MySQL = resultPostgres.getInt("budget_type_id");
+				String remark_MySQL = resultPostgres.getString("remark");
+				
+				//Disable foreign key checks
+				Statement disableFKChecks = conMySQL.createStatement();
+				disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
+
+				String query ="";
+				
+				//Comparing values
+				if(amount_Postgres == amount_MySQL){
+					LOGGER.debug("amount inconsistency: expected "+amount_Postgres+" but received "+amount_MySQL);
+					query+= " UPDATE recurrings SET amount = "+amount_Postgres+" WHERE id = "+id_MySQL+";";
+				}
+				if(type_Postgres.equals(type_MySQL)){
+					LOGGER.debug("type inconsistency: expected '"+type_Postgres+"' but received '"+type_MySQL+"'");
+					query+= " UPDATE recurrings SET type = '"+type_Postgres+"' WHERE id = "+id_MySQL+";";
+				}
+				if(lastRun_Postgres.equals(lastRun_MySQL)){
+					LOGGER.debug("last_run inconsistency: expected "+lastRun_Postgres.getTime()+" but received "+lastRun_MySQL.getTime());
+					query+= " UPDATE recurrings SET last_run = ? WHERE id = "+id_MySQL+";";
+					timeStampUpdateIndicator = 2;
+				}
+				if(timeStamp_Postgres.equals(timeStamp_MySQL)){
+					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres.getTime()+" but received "+timeStamp_MySQL.getTime());
+					query+= " UPDATE recurrings SET created_at = ? WHERE id = "+id_MySQL+";";
+					timeStampUpdateIndicator++;
+				}
+				if(budgetTypeId_Postgres == budgetTypeId_MySQL){
+					LOGGER.debug("budget_type_id inconsistency: expected "+budgetTypeId_Postgres+" but received "+budgetTypeId_MySQL);
+					query+= " UPDATE recurrings SET budget_type_id = "+budgetTypeId_Postgres+" WHERE id = "+id_MySQL+";";
+				}
+				if(remark_Postgres.equals(remark_MySQL)){
+					LOGGER.debug("remark inconsistency: expected '"+remark_Postgres+"' but received '"+remark_MySQL+"'");
+					query+= " UPDATE recurrings SET remark = '"+remark_Postgres+"' WHERE id = "+id_MySQL+";";
+				}
+				
+				//forming all the queries into a statement
+				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
+				
+				//Adding in any timestamp variables which require modification
+				switch (timeStampUpdateIndicator){
+				case 0: break;
+				case 1: preparedStmt.setTimestamp(1, timeStamp_Postgres); break;
+				case 2: preparedStmt.setTimestamp(1, lastRun_Postgres); break;
+				case 3:
+					preparedStmt.setTimestamp(1, lastRun_Postgres);
+					preparedStmt.setTimestamp(2, timeStamp_Postgres);
+				}
+
+				try {
+					preparedStmt.execute();
+				}
+				catch (SQLIntegrityConstraintViolationException  e) {
+					LOGGER.error("recurrings table migration failed");
+					e.printStackTrace();
+				}
+				
+				//Enable foreign key checks
+				Statement enableFKChecks = conMySQL.createStatement();
+				enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+				
+				timeStampUpdateIndicator = 0;
+			}
+			conMySQL.close();
+			conPostgres.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		
+	}
+	
+	/**
 	 * Compares the contents of the transaction tables
 	 */
 	public void checkTransactions(){
@@ -415,7 +521,7 @@ public class MigrationTest{
 			
 			while(resultPostgres.next()) {
 				
-				//local variable so that objects may be passed properly
+				//local variable so that Timestamp objects may be passed properly
 				int timeStampUpdateIndicator=0;
 				
 				// Getting values from the old database (Postgres)
@@ -457,7 +563,7 @@ public class MigrationTest{
 				}
 				if(remark_Postgres.equals(remark_MySQL)){
 					LOGGER.debug("remark inconsistency: expected '"+remark_Postgres+"' but received '"+remark_MySQL+"'");
-					query+= " UPDATE recurrings SET name = '"+remark_Postgres+"' WHERE id = "+id_MySQL+";";
+					query+= " UPDATE recurrings SET remark = '"+remark_Postgres+"' WHERE id = "+id_MySQL+";";
 				}
 				if(auto_Postgres == auto_MySQL){
 					LOGGER.debug("auto inconsistency: expected "+auto_Postgres+" but received "+auto_MySQL);
@@ -469,7 +575,7 @@ public class MigrationTest{
 					timeStampUpdateIndicator = 2;
 				}
 				if(timeStamp_Postgres.equals(timeStamp_MySQL)){
-					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres+" but received "+timeStamp_MySQL);
+					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres.getTime()+" but received "+timeStamp_MySQL.getTime());
 					query+= " UPDATE recurrings SET created_at = ? WHERE id = "+id_MySQL+";";
 					timeStampUpdateIndicator++;
 				}
@@ -524,15 +630,15 @@ public class MigrationTest{
 	public void checkAll(){
 		LOGGER.info("*********Checking Database Contents***********");
 //		LOGGER.info("***************Checking Users*****************");
-//		forkliftUsers();
+//		checkUsers();
 //		LOGGER.info("************Checking Budget Types*************");
-//		forkliftBudgetTypes();
+//		checkBudgetTypes();
 //		LOGGER.info("**************Checking Budgets****************");
-//		forkliftBudgets();
+//		checkBudgets();
 //		LOGGER.info("*************Checking Categories**************");
-//		forkliftCategories();
-//		LOGGER.info("*************Checking Recurrings**************");
-//		forkliftRecurrings();
+//		checkCategories();
+		LOGGER.info("*************Checking Recurrings**************");
+		checkRecurrings();
 		LOGGER.info("************Checking Transactions*************");
 		checkTransactions();
 		LOGGER.info("*********Database Checking Complete***********");
