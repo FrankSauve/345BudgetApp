@@ -397,7 +397,88 @@ public class MigrationTest{
 		LOGGER.info("**************Forklift Deactive***************");
 		LOGGER.info("**************Transfer Stopped****************");
 	}
-	
+
+	/**
+	 * Compares the contents of the categories tables
+	 */
+	public void checkCategories(){
+		try {
+			Connection conPostgres =  DriverManager.getConnection(host1,username1,password1);
+			Connection conMySQL = DriverManager.getConnection(host2,username2,password2);
+
+			Statement stmtPostgres = conPostgres.createStatement( );
+			ResultSet resultPostgres = stmtPostgres.executeQuery("SELECT * FROM categories");
+			
+			Statement stmtMySQL = conMySQL.createStatement( );
+			ResultSet resultMySQL = stmtMySQL.executeQuery("SELECT * FROM categories");
+
+			while(resultPostgres.next()) {
+
+				// Getting values from the old database (Postgres)
+				int id_Postgres = resultPostgres.getInt("id");
+				String name_Postgres = resultPostgres.getString("name");
+				String type_Postgres = resultPostgres.getString("type");
+				Timestamp timeStamp_Postgres = resultPostgres.getTimestamp("created_at");
+				int userId_Postgres = resultPostgres.getInt("user_id");
+				
+				int id_MySQL = resultMySQL.getInt("id");
+				String name_MySQL = resultMySQL.getString("name");
+				String type_MySQL = resultMySQL.getString("type");
+				Timestamp timeStamp_MySQL = resultMySQL.getTimestamp("created_at");
+				int userId_MySQL = resultMySQL.getInt("user_id");
+				
+				//Disable foreign key checks
+				Statement disableFKChecks = conMySQL.createStatement();
+				disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
+
+				// Copying data into new storage (MySQL)
+				String query = "";
+				boolean hasTimeStampInconsistency = false;
+				
+				//Comparing Values
+				if(name_Postgres.equals(name_MySQL)){
+					LOGGER.debug("name inconsistency: expected '"+name_Postgres+"' but received '"+name_MySQL+"'");
+					query+= " UPDATE categories SET name = '"+name_Postgres+"' WHERE id = "+id_MySQL+";";
+				}
+				if(type_Postgres.equals(type_MySQL)){
+					LOGGER.debug("type inconsistency: expected '"+type_Postgres+"' but received '"+type_MySQL+"'");
+					query+= " UPDATE categories SET type = '"+type_Postgres+"' WHERE id = "+id_MySQL+";";
+				}
+				if(timeStamp_Postgres.equals(timeStamp_MySQL)){
+					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres.getTime()+" but received "+timeStamp_MySQL.getTime());
+					query+= " UPDATE categories SET created_at = ? WHERE id = "+id_MySQL+";";
+					hasTimeStampInconsistency = true;
+				}
+				if(userId_Postgres == userId_MySQL){
+					LOGGER.debug("user_id inconsistency: expected "+userId_Postgres+" but received "+userId_MySQL);
+					query+= " UPDATE categories SET user_id = "+userId_Postgres+" WHERE id = "+id_MySQL+";";
+				}
+				
+				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
+				//adding in the Timestamp variable to the statement if it was inconsistent
+				if(hasTimeStampInconsistency){
+					preparedStmt.setTimestamp(1, timeStamp_Postgres);
+				}
+				
+				try {
+					preparedStmt.execute();
+				}
+				catch (SQLIntegrityConstraintViolationException  e) {
+					LOGGER.error("categories table migration failed");
+					e.printStackTrace();
+				}
+				
+				//Enable foreign key checks
+				Statement enableFKChecks = conMySQL.createStatement();
+				enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+				hasTimeStampInconsistency = false;
+			}
+			conMySQL.close();
+			conPostgres.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
 	/**
 	 * Compares the contents of the recurring tables
 	 */
@@ -413,9 +494,6 @@ public class MigrationTest{
 			ResultSet resultMySQL = stmtMySQL.executeQuery("SELECT * FROM recurrings");
 
 			while(resultPostgres.next()) {
-
-				//local variable so that Timestamp objects may be passed properly
-				int timeStampUpdateIndicator =0;
 				
 				// Getting values from the old database (Postgres)
 				int id_Postgres = resultPostgres.getInt("id");
@@ -427,19 +505,20 @@ public class MigrationTest{
 				String remark_Postgres = resultPostgres.getString("remark");
 				
 				// Getting values from the new database (MySQL)
-				int id_MySQL = resultPostgres.getInt("id");
-				double amount_MySQL = resultPostgres.getDouble("amount");
-				String type_MySQL = resultPostgres.getString("type");
-				Timestamp lastRun_MySQL = resultPostgres.getTimestamp("last_run");
-				Timestamp timeStamp_MySQL = resultPostgres.getTimestamp("created_at");
-				int budgetTypeId_MySQL = resultPostgres.getInt("budget_type_id");
-				String remark_MySQL = resultPostgres.getString("remark");
+				int id_MySQL = resultMySQL.getInt("id");
+				double amount_MySQL = resultMySQL.getDouble("amount");
+				String type_MySQL = resultMySQL.getString("type");
+				Timestamp lastRun_MySQL = resultMySQL.getTimestamp("last_run");
+				Timestamp timeStamp_MySQL = resultMySQL.getTimestamp("created_at");
+				int budgetTypeId_MySQL = resultMySQL.getInt("budget_type_id");
+				String remark_MySQL = resultMySQL.getString("remark");
 				
 				//Disable foreign key checks
 				Statement disableFKChecks = conMySQL.createStatement();
 				disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
 
 				String query ="";
+				int timeStampUpdateIndicator =0;
 				
 				//Comparing values
 				if(amount_Postgres == amount_MySQL){
@@ -521,9 +600,6 @@ public class MigrationTest{
 			
 			while(resultPostgres.next()) {
 				
-				//local variable so that Timestamp objects may be passed properly
-				int timeStampUpdateIndicator=0;
-				
 				// Getting values from the old database (Postgres)
 				int id_Postgres = resultPostgres.getInt("id");
 				String name_Postgres = resultPostgres.getString("name");
@@ -551,41 +627,42 @@ public class MigrationTest{
 				disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
 
 				String query = "";
+				int timeStampUpdateIndicator =0;
 				
 				// Comparing values
 				if(name_Postgres.equals(name_MySQL)){
 					LOGGER.debug("name inconsistency: expected '"+name_Postgres+"' but received '"+name_MySQL+"'");
-					query+= " UPDATE recurrings SET name = '"+name_Postgres+"' WHERE id = "+id_MySQL+";";
+					query+= " UPDATE transactions SET name = '"+name_Postgres+"' WHERE id = "+id_MySQL+";";
 				}
 				if(amount_Postgres == amount_MySQL){
 					LOGGER.debug("amount inconsistency: expected "+amount_Postgres+" but received "+amount_MySQL);
-					query+= " UPDATE recurrings SET amount = "+amount_Postgres+" WHERE id = "+id_MySQL+";";
+					query+= " UPDATE transactions SET amount = "+amount_Postgres+" WHERE id = "+id_MySQL+";";
 				}
 				if(remark_Postgres.equals(remark_MySQL)){
 					LOGGER.debug("remark inconsistency: expected '"+remark_Postgres+"' but received '"+remark_MySQL+"'");
-					query+= " UPDATE recurrings SET remark = '"+remark_Postgres+"' WHERE id = "+id_MySQL+";";
+					query+= " UPDATE transactions SET remark = '"+remark_Postgres+"' WHERE id = "+id_MySQL+";";
 				}
 				if(auto_Postgres == auto_MySQL){
 					LOGGER.debug("auto inconsistency: expected "+auto_Postgres+" but received "+auto_MySQL);
-					query+= " UPDATE recurrings SET auto = "+auto_Postgres+" WHERE id = "+id_MySQL+";";
+					query+= " UPDATE transactions SET auto = "+auto_Postgres+" WHERE id = "+id_MySQL+";";
 				}
 				if(transactionOn_Postgres.equals(transactionOn_MySQL)){
 					LOGGER.debug("transaction_on inconsistency: expected "+transactionOn_Postgres.getTime()+" but received "+transactionOn_MySQL.getTime());
-					query+= " UPDATE recurrings SET transaction_on = ? WHERE id = "+id_MySQL+";";
+					query+= " UPDATE transactions SET transaction_on = ? WHERE id = "+id_MySQL+";";
 					timeStampUpdateIndicator = 2;
 				}
 				if(timeStamp_Postgres.equals(timeStamp_MySQL)){
 					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres.getTime()+" but received "+timeStamp_MySQL.getTime());
-					query+= " UPDATE recurrings SET created_at = ? WHERE id = "+id_MySQL+";";
+					query+= " UPDATE transactions SET created_at = ? WHERE id = "+id_MySQL+";";
 					timeStampUpdateIndicator++;
 				}
 				if(budgetId_Postgres == budgetId_MySQL){
 					LOGGER.debug("budget_id inconsistency: expected "+budgetId_Postgres+" but received "+budgetId_MySQL);
-					query+= " UPDATE recurrings SET budget_id = "+budgetId_Postgres+" WHERE id = "+id_MySQL+";";
+					query+= " UPDATE transactions SET budget_id = "+budgetId_Postgres+" WHERE id = "+id_MySQL+";";
 				}
 				if(recurringId_Postgres == recurringId_MySQL){
 					LOGGER.debug("recurring_id inconsistency: expected "+recurringId_Postgres+" but received "+recurringId_MySQL);
-					query+= " UPDATE recurrings SET recurring_id = "+recurringId_Postgres+" WHERE id = "+id_MySQL+";";
+					query+= " UPDATE transactions SET recurring_id = "+recurringId_Postgres+" WHERE id = "+id_MySQL+";";
 				}
 				
 				
@@ -635,8 +712,8 @@ public class MigrationTest{
 //		checkBudgetTypes();
 //		LOGGER.info("**************Checking Budgets****************");
 //		checkBudgets();
-//		LOGGER.info("*************Checking Categories**************");
-//		checkCategories();
+		LOGGER.info("*************Checking Categories**************");
+		checkCategories();
 		LOGGER.info("*************Checking Recurrings**************");
 		checkRecurrings();
 		LOGGER.info("************Checking Transactions*************");
