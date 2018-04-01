@@ -904,7 +904,7 @@ public class MigrationTest{
 	public void checkAll(){
 		LOGGER.info("*********Checking Database Contents***********");
 		LOGGER.info("***************Checking Users*****************");
-		//checkUsers();
+		checkUsers();
 		LOGGER.info("************Checking Budget Types*************");
 		//checkBudgetTypes();
 		LOGGER.info("**************Checking Budgets****************");
@@ -914,7 +914,7 @@ public class MigrationTest{
 		LOGGER.info("*************Checking Recurrings**************");
 		//checkRecurrings();
 		LOGGER.info("************Checking Transactions*************");
-		checkTransactions();
+		//checkTransactions();
 		LOGGER.info("*********Database Checking Complete***********");
 	}
 
@@ -924,9 +924,13 @@ public class MigrationTest{
 		// forklift the data from old storage to new 
 		forklift();
 
-		// check for inconsistencies 
-		// ensure inconsistencies are fixed 
-		checkAll();
+		//Start consistency checker asynchronously
+		new Thread( new Runnable() {
+			public void run(){
+				checkAll();
+				return; 
+			}
+	    }).start();
 
 
 
