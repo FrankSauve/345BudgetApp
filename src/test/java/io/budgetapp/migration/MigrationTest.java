@@ -25,6 +25,8 @@ public class MigrationTest{
 	String host2 = "jdbc:mysql://localhost:3306/345BudgetApp";
 	String username2 = "root";
 	String password2 = "root";
+	
+	MySQLStorage mySQLStorage;
 
 	/**
 	 * Migrates the user table
@@ -55,24 +57,11 @@ public class MigrationTest{
 				String currency = result.getString("currency");
 				LOGGER.debug("currency:" + currency);
 
-
 				// Copying data into new storage (MySQL)
-				String query = " INSERT INTO users (username, password, name, created_at, currency)"
-						+ " VALUES (?, ?, ?, ?, ?)";
-				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
-				preparedStmt.setString(1, username);
-				preparedStmt.setString(2, password);
-				preparedStmt.setString(3, name);
-				preparedStmt.setTimestamp(4, timeStamp);
-				preparedStmt.setString(5, currency);
+				mySQLStorage = new MySQLStorage(conMySQL);
+				mySQLStorage.insertUsers(username, password, name, timeStamp, currency);
 
 
-				try {
-					preparedStmt.execute();
-				}
-				catch (SQLIntegrityConstraintViolationException  e) {
-					LOGGER.error("username " + username + " already exists");
-				}
 			}
 			conMySQL.close();
 			conPostgres.close();
@@ -101,18 +90,10 @@ public class MigrationTest{
 				Timestamp timeStamp = result.getTimestamp("created_at");
 				LOGGER.debug("created_at" + timeStamp );
 
-				// Copying data into new storage (MySQL)
-				String query = " INSERT INTO budget_types (created_at) VALUES (?)";
-				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
-				preparedStmt.setTimestamp(1, timeStamp);
+				// Copying data into budget table
+				mySQLStorage = new MySQLStorage(conMySQL);
+				mySQLStorage.insertBudgetTypes(timeStamp);
 
-				try {
-					preparedStmt.execute();
-				}
-				catch (SQLIntegrityConstraintViolationException  e) {
-					LOGGER.error("budget_types table migration failed");
-					e.printStackTrace();
-				}
 			}
 			conMySQL.close();
 			conPostgres.close();
@@ -155,34 +136,9 @@ public class MigrationTest{
 				int typeId = result.getInt("type_id");
 				LOGGER.debug("type_id" + typeId);
 
-				//Disable foreign key checks
-				Statement disableFKChecks = conMySQL.createStatement();
-				disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
-
-				// Copying data into new storage (MySQL)
-				String query = " INSERT INTO budgets (name, projected, actual, period_on, created_at, user_id, category_id, type_id)"
-						+ " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
-				preparedStmt.setString(1, name);
-				preparedStmt.setDouble(2, projected);
-				preparedStmt.setDouble(3, actual);
-				preparedStmt.setDate(4, periodOn);
-				preparedStmt.setTimestamp(5, timeStamp);
-				preparedStmt.setInt(6, userId);
-				preparedStmt.setInt(7, categoryId);
-				preparedStmt.setInt(8, typeId);
-
-				try {
-					preparedStmt.execute();
-				}
-				catch (SQLIntegrityConstraintViolationException  e) {
-					LOGGER.error("budgets table migration failed");
-					e.printStackTrace();
-				}
-
-				//Enable foreign key checks
-				Statement enableFKChecks = conMySQL.createStatement();
-				enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+				// Copying data into budget table
+				mySQLStorage = new MySQLStorage(conMySQL);
+				mySQLStorage.insertBudgets(name, projected, actual, periodOn, timeStamp, userId, categoryId, typeId);
 			}
 			conMySQL.close();
 			conPostgres.close();
@@ -190,7 +146,7 @@ public class MigrationTest{
 			e.printStackTrace();
 		}
 	}
-
+	
 	/**
 	 * Migrate the categories table
 	 */
@@ -217,30 +173,9 @@ public class MigrationTest{
 				int userId = result.getInt("user_id");
 				LOGGER.debug("user_id" + userId);
 
-				//Disable foreign key checks
-				Statement disableFKChecks = conMySQL.createStatement();
-				disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
-
-				// Copying data into new storage (MySQL)
-				String query = " INSERT INTO categories (name, type, created_at, user_id)"
-						+ " VALUES (?, ?, ?, ?)";
-				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
-				preparedStmt.setString(1, name);
-				preparedStmt.setString(2, type);
-				preparedStmt.setTimestamp(3, timeStamp);
-				preparedStmt.setInt(4, userId);
-
-				try {
-					preparedStmt.execute();
-				}
-				catch (SQLIntegrityConstraintViolationException  e) {
-					LOGGER.error("categories table migration failed");
-					e.printStackTrace();
-				}
-
-				//Enable foreign key checks
-				Statement enableFKChecks = conMySQL.createStatement();
-				enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+				// Copying data into budget table
+				mySQLStorage = new MySQLStorage(conMySQL);
+				mySQLStorage.insertCategories(id, name, type, timeStamp, userId);
 			}
 			conMySQL.close();
 			conPostgres.close();
@@ -248,7 +183,7 @@ public class MigrationTest{
 			e.printStackTrace();
 		}
 	}
-
+	
 	/**
 	 * Migrate the recurrings tables
 	 */
@@ -279,31 +214,9 @@ public class MigrationTest{
 				String remark = result.getString("remark");
 				LOGGER.debug("remark:" + remark);
 
-				//Disable foreign key checks
-				Statement disableFKChecks = conMySQL.createStatement();
-				disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
-
-				// Copying data into new storage (MySQL)
-				String query = " INSERT INTO recurrings (amount, type, last_run_at, created_at, budget_type_id)"
-						+ " VALUES (?, ?, ?, ?, ?)";
-				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
-				preparedStmt.setDouble(1, amount);
-				preparedStmt.setString(2, type);
-				preparedStmt.setTimestamp(3, lastRun);
-				preparedStmt.setTimestamp(4, timeStamp);
-				preparedStmt.setInt(5, budgetTypeId);
-
-				try {
-					preparedStmt.execute();
-				}
-				catch (SQLIntegrityConstraintViolationException  e) {
-					LOGGER.error("recurrings table migration failed");
-					e.printStackTrace();
-				}
-
-				//Enable foreign key checks
-				Statement enableFKChecks = conMySQL.createStatement();
-				enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+				// Copying data into budget table
+				mySQLStorage = new MySQLStorage(conMySQL);
+				mySQLStorage.insertRecurrings(amount, type, lastRun, timeStamp, budgetTypeId, remark);
 			}
 			conMySQL.close();
 			conPostgres.close();
@@ -346,34 +259,9 @@ public class MigrationTest{
 				int recurringId = result.getInt("recurring_id");
 				LOGGER.debug("recurring_id:" + recurringId);
 
-				//Disable foreign key checks
-				Statement disableFKChecks = conMySQL.createStatement();
-				disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
-
-				// Copying data into new storage (MySQL)
-				String query = " INSERT INTO transactions (name, amount, remark, auto, transaction_on, created_at, budget_id, recurring_id)"
-						+ " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
-				preparedStmt.setString(1, name);
-				preparedStmt.setDouble(2, amount);
-				preparedStmt.setString(3, remark);
-				preparedStmt.setBoolean(4, auto);
-				preparedStmt.setTimestamp(5, transactionOn);
-				preparedStmt.setTimestamp(6, timeStamp);
-				preparedStmt.setInt(7, budgetId);
-				preparedStmt.setInt(8, recurringId);
-
-				try {
-					preparedStmt.execute();
-				}
-				catch (SQLIntegrityConstraintViolationException  e) {
-					LOGGER.error("transactions table migration failed");
-					e.printStackTrace();
-				}
-
-				//Enable foreign key checks
-				Statement enableFKChecks = conMySQL.createStatement();
-				enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+				// Copying data into budget table
+				mySQLStorage = new MySQLStorage(conMySQL);
+				mySQLStorage.insertTransactions(name, amount, remark, auto, transactionOn, timeStamp, budgetId, recurringId);
 			}
 			conMySQL.close();
 			conPostgres.close();
