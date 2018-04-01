@@ -399,6 +399,86 @@ public class MigrationTest{
 	}
 
 	/**
+	 * Compares the user tables
+	 */
+	public void checkUsers(){
+		try {
+			Connection conPostgres =  DriverManager.getConnection(host1,username1,password1);
+			Connection conMySQL = DriverManager.getConnection(host2,username2,password2);
+
+			Statement stmtPostgres = conPostgres.createStatement( );
+			ResultSet resultPostgres = stmtPostgres.executeQuery("SELECT * FROM users");
+			
+			Statement stmtMySQL = conMySQL.createStatement( );
+			ResultSet resultMySQL = stmtMySQL.executeQuery("SELECT * FROM users");
+
+			while(resultPostgres.next()) {
+
+				// Getting values from the old database (Postgres)
+				int id_Postgres = resultPostgres.getInt("id");
+				String username_Postgres= resultPostgres.getString("username");
+				String password_Postgres = resultPostgres.getString("password");
+				String name_Postgres = resultPostgres.getString("name");
+				Timestamp timeStamp_Postgres = resultPostgres.getTimestamp("created_at");
+				String currency_Postgres = resultPostgres.getString("currency");
+				
+				// Getting values from the new database (MySQL)
+				int id_MySQL = resultMySQL.getInt("id");
+				String username_MySQL= resultMySQL.getString("username");
+				String password_MySQL = resultMySQL.getString("password");
+				String name_MySQL = resultMySQL.getString("name");
+				Timestamp timeStamp_MySQL = resultMySQL.getTimestamp("created_at");
+				String currency_MySQL = resultMySQL.getString("currency");
+
+
+				// Copying data into new storage (MySQL)
+				String query = "";
+				boolean hasTimeStampInconsistency = false;
+				//Comparing Values
+				if(!username_Postgres.equals(username_MySQL)){
+					LOGGER.debug("username inconsistency: expected '"+username_Postgres+"' but received '"+username_MySQL+"'");
+					query+= " UPDATE users SET username = '"+username_Postgres+"' WHERE id = "+id_MySQL+";";
+				}
+				if(!password_Postgres.equals(password_MySQL)){
+					LOGGER.debug("password inconsistency: expected '"+password_Postgres+"' but received '"+password_MySQL+"'");
+					query+= " UPDATE budgets SET password = '"+password_Postgres+"' WHERE id = "+id_MySQL+";";
+				}
+				if(!name_Postgres.equals(name_MySQL)){
+					LOGGER.debug("name inconsistency: expected '"+name_Postgres+"' but received '"+name_MySQL+"'");
+					query+= " UPDATE budgets SET name = '"+name_Postgres+"' WHERE id = "+id_MySQL+";";
+				}
+				if(!timeStamp_Postgres.equals(timeStamp_MySQL)){
+					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres.getTime()+" but received "+timeStamp_MySQL.getTime());
+					query+= " UPDATE budgets SET created_at = ? WHERE id = "+id_MySQL+";";
+					hasTimeStampInconsistency = true;
+				}
+				if(!currency_Postgres.equals(currency_MySQL)){
+					LOGGER.debug("currency inconsistency: expected '"+currency_Postgres+"' but received '"+currency_MySQL+"'");
+					query+= " UPDATE users SET currency = '"+currency_Postgres+"' WHERE id = "+id_MySQL+";";
+				}
+				
+				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
+				
+				//Adding in any unspecified variables to the statement if they require updating
+				if(hasTimeStampInconsistency){
+					preparedStmt.setTimestamp(1, timeStamp_Postgres);
+				}
+
+				try {
+					preparedStmt.execute();
+				}
+				catch (SQLIntegrityConstraintViolationException  e) {
+					LOGGER.error("users table checking failed");
+				}
+				hasTimeStampInconsistency = false;
+			}
+			conMySQL.close();
+			conPostgres.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	/**
 	 * Compares the budget_types data
 	 */
 	public void checkBudgetTypes(){
@@ -423,7 +503,7 @@ public class MigrationTest{
 				Timestamp timeStamp_MySQL = resultMySQL.getTimestamp("created_at");
 				
 				// Copying data into new storage (MySQL)
-				String query = " INSERT INTO budget_types (created_at) VALUES (?)";
+				String query = "";
 				boolean hasTimeStampInconsistency = false;
 				
 				//Comparing values
@@ -443,7 +523,7 @@ public class MigrationTest{
 					preparedStmt.execute();
 				}
 				catch (SQLIntegrityConstraintViolationException  e) {
-					LOGGER.error("budget_types table migration failed");
+					LOGGER.error("budget_types table checking failed");
 					e.printStackTrace();
 				}
 				hasTimeStampInconsistency = false;
@@ -552,7 +632,7 @@ public class MigrationTest{
 					preparedStmt.execute();
 				}
 				catch (SQLIntegrityConstraintViolationException  e) {
-					LOGGER.error("budgets table migration failed");
+					LOGGER.error("budgets table checking failed");
 					e.printStackTrace();
 				}
 				
@@ -634,7 +714,7 @@ public class MigrationTest{
 					preparedStmt.execute();
 				}
 				catch (SQLIntegrityConstraintViolationException  e) {
-					LOGGER.error("categories table migration failed");
+					LOGGER.error("categories table checking failed");
 					e.printStackTrace();
 				}
 				
@@ -735,7 +815,7 @@ public class MigrationTest{
 					preparedStmt.execute();
 				}
 				catch (SQLIntegrityConstraintViolationException  e) {
-					LOGGER.error("recurrings table migration failed");
+					LOGGER.error("recurrings table checking failed");
 					e.printStackTrace();
 				}
 				
@@ -876,8 +956,8 @@ public class MigrationTest{
 	 */
 	public void checkAll(){
 		LOGGER.info("*********Checking Database Contents***********");
-//		LOGGER.info("***************Checking Users*****************");
-//		checkUsers();
+		LOGGER.info("***************Checking Users*****************");
+		checkUsers();
 		LOGGER.info("************Checking Budget Types*************");
 		checkBudgetTypes();
 		LOGGER.info("**************Checking Budgets****************");
