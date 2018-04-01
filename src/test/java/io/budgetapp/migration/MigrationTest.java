@@ -205,8 +205,8 @@ public class MigrationTest{
 				LOGGER.debug("amount: " + amount);
 				String type = result.getString("type");
 				LOGGER.debug("type: " + type);
-				Timestamp lastRun = result.getTimestamp("last_run");
-				LOGGER.debug("last_run" + lastRun );
+				Timestamp lastRun = result.getTimestamp("last_run_at");
+				LOGGER.debug("last_run_at" + lastRun );
 				Timestamp timeStamp = result.getTimestamp("created_at");
 				LOGGER.debug("created_at" + timeStamp );
 				int budgetTypeId = result.getInt("budget_type_id");
