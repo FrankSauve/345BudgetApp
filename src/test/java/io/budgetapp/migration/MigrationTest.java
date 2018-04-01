@@ -399,6 +399,62 @@ public class MigrationTest{
 	}
 
 	/**
+	 * Compares the budget_types data
+	 */
+	public void checkBudgetTypes(){
+		try {
+			Connection conPostgres =  DriverManager.getConnection(host1,username1,password1);
+			Connection conMySQL = DriverManager.getConnection(host2,username2,password2);
+
+			Statement stmtPostgres = conPostgres.createStatement( );
+			ResultSet resultPostgres = stmtPostgres.executeQuery("SELECT * FROM budget_types");
+			
+			Statement stmtMySQL = conMySQL.createStatement( );
+			ResultSet resultMySQL = stmtMySQL.executeQuery("SELECT * FROM budget_types");
+
+			while(resultPostgres.next()) {
+
+				// Getting values from the old database (Postgres)
+				int id_Postgres = resultPostgres.getInt("id");
+				Timestamp timeStamp_Postgres = resultPostgres.getTimestamp("created_at");
+				
+				// Getting values from the new database (MySQL)
+				int id_MySQL = resultMySQL.getInt("id");
+				Timestamp timeStamp_MySQL = resultMySQL.getTimestamp("created_at");
+				
+				// Copying data into new storage (MySQL)
+				String query = " INSERT INTO budget_types (created_at) VALUES (?)";
+				boolean hasTimeStampInconsistency = false;
+				
+				//Comparing values
+				if(!timeStamp_Postgres.equals(timeStamp_MySQL)){
+					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres.getTime()+" but received "+timeStamp_MySQL.getTime());
+					query+= " UPDATE budget_types SET created_at = ? WHERE id = "+id_MySQL+";";
+					hasTimeStampInconsistency = true;
+				}
+				
+				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
+				//Adding in any unspecified variables to the statement if they require updating
+				if(hasTimeStampInconsistency){
+					preparedStmt.setTimestamp(1, timeStamp_Postgres);
+				}
+				
+				try {
+					preparedStmt.execute();
+				}
+				catch (SQLIntegrityConstraintViolationException  e) {
+					LOGGER.error("budget_types table migration failed");
+					e.printStackTrace();
+				}
+				hasTimeStampInconsistency = false;
+			}
+			conMySQL.close();
+			conPostgres.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+	}
+	/**
 	 * Compares the contents of the budgets table
 	 */
 	public void checkBudgets(){
@@ -822,8 +878,8 @@ public class MigrationTest{
 		LOGGER.info("*********Checking Database Contents***********");
 //		LOGGER.info("***************Checking Users*****************");
 //		checkUsers();
-//		LOGGER.info("************Checking Budget Types*************");
-//		checkBudgetTypes();
+		LOGGER.info("************Checking Budget Types*************");
+		checkBudgetTypes();
 		LOGGER.info("**************Checking Budgets****************");
 		checkBudgets();
 		LOGGER.info("*************Checking Categories**************");
