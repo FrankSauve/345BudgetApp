@@ -351,7 +351,7 @@ public class MigrationTest{
 				disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
 
 				// Copying data into new storage (MySQL)
-				String query = " INSERT INTO recurrings (name, amount, remark, auto, transaction_on, created_at, budget_id, recurring_id)"
+				String query = " INSERT INTO transactions (name, amount, remark, auto, transaction_on, created_at, budget_id, recurring_id)"
 						+ " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
 				preparedStmt.setString(1, name);
