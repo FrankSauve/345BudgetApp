@@ -443,7 +443,7 @@ public class MigrationTest{
 				
 				// Copying data into new storage (MySQL)
 				String query = "";
-				
+				int timeStampUpdateIndicator =0;
 				//Comparing Values
 				if(!name_Postgres.equals(name_MySQL)){
 					LOGGER.debug("name inconsistency: expected '"+name_Postgres+"' but received '"+name_MySQL+"'");
@@ -457,9 +457,40 @@ public class MigrationTest{
 					LOGGER.debug("actual inconsistency: expected "+actual_Postgres+" but received "+actual_MySQL);
 					query+= " UPDATE budgets SET actual = "+actual_Postgres+" WHERE id = "+id_MySQL+";";
 				}
-				
+				if(!periodOn_Postgres.equals(periodOn_MySQL)){
+					LOGGER.debug("period_on inconsistency: expected "+periodOn_Postgres.getTime()+" but received "+periodOn_MySQL.getTime());
+					query+= " UPDATE budgets SET period_on = ? WHERE id = "+id_MySQL+";";
+					timeStampUpdateIndicator = 2;
+				}
+				if(!timeStamp_Postgres.equals(timeStamp_MySQL)){
+					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres.getTime()+" but received "+timeStamp_MySQL.getTime());
+					query+= " UPDATE budgets SET created_at = ? WHERE id = "+id_MySQL+";";
+					timeStampUpdateIndicator++;
+				}
+				if(userId_Postgres != userId_MySQL){
+					LOGGER.debug("user_id inconsistency: expected "+userId_Postgres+" but received "+userId_MySQL);
+					query+= " UPDATE budgets SET user_id = "+userId_Postgres+" WHERE id = "+id_MySQL+";";
+				}
+				if(categoryId_Postgres != categoryId_MySQL){
+					LOGGER.debug("category_id inconsistency: expected "+categoryId_Postgres+" but received "+categoryId_MySQL);
+					query+= " UPDATE budgets SET category_id = "+categoryId_Postgres+" WHERE id = "+id_MySQL+";";
+				}
+				if(typeId_Postgres != typeId_MySQL){
+					LOGGER.debug("type_id inconsistency: expected "+typeId_Postgres+" but received "+typeId_MySQL);
+					query+= " UPDATE budgets SET type_id = "+typeId_Postgres+" WHERE id = "+id_MySQL+";";
+				}
 				
 				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
+				
+				//Adding in any unspecified variables to the statement
+				switch (timeStampUpdateIndicator){
+				case 0: break;
+				case 1: preparedStmt.setTimestamp(1, timeStamp_Postgres); break;
+				case 2: preparedStmt.setDate(1, periodOn_Postgres); break;
+				case 3:
+					preparedStmt.setDate(1, periodOn_Postgres);
+					preparedStmt.setTimestamp(2, timeStamp_Postgres);
+				}
 				
 				try {
 					preparedStmt.execute();
@@ -472,6 +503,7 @@ public class MigrationTest{
 				//Enable foreign key checks
 				Statement enableFKChecks = conMySQL.createStatement();
 				enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+				timeStampUpdateIndicator = 0;
 			}
 			conMySQL.close();
 			conPostgres.close();
