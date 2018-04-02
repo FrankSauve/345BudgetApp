@@ -13,6 +13,8 @@ import org.slf4j.LoggerFactory;
 
 public class ConsistencyChecker {
 	
+	private long inconsistencies;
+	
 	private Connection conPostgres;
 	private Connection conMySQL;
 	
@@ -20,11 +22,17 @@ public class ConsistencyChecker {
 	ConsistencyChecker(Connection conPostgres, Connection conMySQL){
 		this.conPostgres = conPostgres;
 		this.conMySQL = conMySQL;
+		inconsistencies = 0;
+	}
+	
+	public long getNumInconsistencies(){
+		return inconsistencies;
 	}
 	
 	public void close() throws SQLException {
 		conMySQL.close();
 		conPostgres.close();
+		inconsistencies = 0;
 	}
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(ConsistencyChecker.class);
@@ -109,6 +117,7 @@ public class ConsistencyChecker {
 				//Adding in any unspecified variables to the statement if they require updating
 				if(hasTimeStampInconsistency){
 					preparedStmt.setTimestamp(1, timeStamp_Postgres);
+					inconsistencies++;
 				}
 
 				try {
@@ -162,6 +171,7 @@ public class ConsistencyChecker {
 					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres.getTime()+" but received "+timeStamp_MySQL.getTime() + " at index " + id_MySQL);
 					query+= " UPDATE budget_types SET created_at = ? WHERE id = "+id_MySQL+";";
 					hasTimeStampInconsistency = true;
+					inconsistencies++;
 				}
 
 				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
@@ -235,14 +245,17 @@ public class ConsistencyChecker {
 				if(!name_Postgres.equals(name_MySQL)){
 					LOGGER.debug("name inconsistency: expected '"+name_Postgres+"' but received '"+name_MySQL+"'");
 					query+= " UPDATE budgets SET name = '"+name_Postgres+"' WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 				if(projected_Postgres != projected_MySQL){
 					LOGGER.debug("projected inconsistency: expected "+projected_Postgres+" but received "+projected_MySQL);
 					query+= " UPDATE budgets SET projected = "+projected_Postgres+" WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 				if(actual_Postgres != actual_MySQL){
 					LOGGER.debug("actual inconsistency: expected "+actual_Postgres+" but received "+actual_MySQL);
 					query+= " UPDATE budgets SET actual = "+actual_Postgres+" WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 				
 				// Extract date and time only 
@@ -254,6 +267,7 @@ public class ConsistencyChecker {
 					query+= " UPDATE budgets SET period_on = ? WHERE id = "+id_MySQL+";";
 
 					hasPeriodOnInconsistency = true;
+					inconsistencies++;
 				}
 				
 				// Extract date and time only 
@@ -265,19 +279,23 @@ public class ConsistencyChecker {
 					query+= " UPDATE budgets SET created_at = ? WHERE id = "+id_MySQL+";";
 
 					hasTimeStampInconsistency =true;
+					inconsistencies++;
 				}
 				
 				if(userId_Postgres != userId_MySQL){
 					LOGGER.debug("user_id inconsistency: expected "+userId_Postgres+" but received "+userId_MySQL);
 					query+= " UPDATE budgets SET user_id = "+userId_Postgres+" WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 				if(categoryId_Postgres != categoryId_MySQL){
 					LOGGER.debug("category_id inconsistency: expected "+categoryId_Postgres+" but received "+categoryId_MySQL);
 					query+= " UPDATE budgets SET category_id = "+categoryId_Postgres+" WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 				if(typeId_Postgres != typeId_MySQL){
 					LOGGER.debug("type_id inconsistency: expected "+typeId_Postgres+" but received "+typeId_MySQL);
 					query+= " UPDATE budgets SET type_id = "+typeId_Postgres+" WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 
 				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
@@ -351,10 +369,12 @@ public class ConsistencyChecker {
 				if(!name_Postgres.equals(name_MySQL)){
 					LOGGER.debug("name inconsistency: expected '"+name_Postgres+"' but received '"+name_MySQL+"'");
 					query+= " UPDATE categories SET name = '"+name_Postgres+"' WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 				if(!type_Postgres.equals(type_MySQL)){
 					LOGGER.debug("type inconsistency: expected '"+type_Postgres+"' but received '"+type_MySQL+"'");
 					query+= " UPDATE categories SET type = '"+type_Postgres+"' WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 
 				// Extract date and time only 
@@ -365,10 +385,12 @@ public class ConsistencyChecker {
 					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres.getTime()+" but received "+timeStamp_MySQL.getTime() + " at index " + id_MySQL);
 					query+= " UPDATE categories SET created_at = ? WHERE id = "+id_MySQL+";";
 					hasTimeStampInconsistency = true;
+					inconsistencies++;
 				}
 				if(userId_Postgres != userId_MySQL){
 					LOGGER.debug("user_id inconsistency: expected "+userId_Postgres+" but received "+userId_MySQL);
 					query+= " UPDATE categories SET user_id = "+userId_Postgres+" WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 
 
@@ -441,11 +463,13 @@ public class ConsistencyChecker {
 				if(amount_Postgres != amount_MySQL){
 					LOGGER.debug("amount inconsistency: expected "+amount_Postgres+" but received "+amount_MySQL);
 					query+= " UPDATE recurrings SET amount = "+amount_Postgres+" WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 
 				if(!type_Postgres.equals(type_MySQL)){
 					LOGGER.debug("type inconsistency: expected '"+type_Postgres+"' but received '"+type_MySQL+"'");
 					query+= " UPDATE recurrings SET type = '"+type_Postgres+"' WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 
 				// Extract date and time only 
@@ -456,6 +480,7 @@ public class ConsistencyChecker {
 					LOGGER.debug("last_run_at inconsistency: expected "+lastRun_Postgres.getTime()+" but received "+lastRun_MySQL.getTime());
 					query+= " UPDATE recurrings SET last_run_at = ? WHERE id = "+id_MySQL+";";
 					lastRunInconsistency = true;
+					inconsistencies++;
 				}
 
 				// Extract date and time only 
@@ -466,15 +491,18 @@ public class ConsistencyChecker {
 					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres.getTime()+" but received "+timeStamp_MySQL.getTime());
 					query+= " UPDATE recurrings SET created_at = ? WHERE id = "+id_MySQL+";";
 					timeStampInconsistency = true;
+					inconsistencies++;
 				}
 
 				if(budgetTypeId_Postgres != budgetTypeId_MySQL){
 					LOGGER.debug("budget_type_id inconsistency: expected "+budgetTypeId_Postgres+" but received "+budgetTypeId_MySQL);
 					query+= " UPDATE recurrings SET budget_type_id = "+budgetTypeId_Postgres+" WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 				if(!remark_Postgres.equals(remark_MySQL)){
 					LOGGER.debug("remark inconsistency: expected "+remark_Postgres+" but received '"+remark_MySQL+"'");
 					query+= " UPDATE recurrings SET remark = "+remark_Postgres+" WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 
 				//forming all the queries into a statement
@@ -564,18 +592,22 @@ public class ConsistencyChecker {
 					LOGGER.debug("name inconsistency: expected '"+name_Postgres+"' but received '"+name_MySQL+"'");
 
 					query+= " UPDATE transactions SET name = '"+name_Postgres+"' WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 				if(amount_Postgres != amount_MySQL){
 					LOGGER.debug("amount inconsistency: expected "+amount_Postgres+" but received "+amount_MySQL);
 					query+= " UPDATE transactions SET amount = "+amount_Postgres+" WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 				if(!remark_Postgres.equals(remark_MySQL)){
 					LOGGER.debug("remark inconsistency: expected '"+remark_Postgres+"' but received '"+remark_MySQL+"'");
 					query+= " UPDATE transactions SET remark = '"+remark_Postgres+"' WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 				if(auto_Postgres != auto_MySQL){
 					LOGGER.debug("auto inconsistency: expected "+auto_Postgres+" but received "+auto_MySQL);
 					query+= " UPDATE transactions SET auto = "+auto_Postgres+" WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 				
 				// Extract date and time only 
@@ -587,6 +619,7 @@ public class ConsistencyChecker {
 					query+= " UPDATE transactions SET transaction_on = ? WHERE id = "+id_MySQL+";";
 
 					transactionOnInconsistency = true;
+					inconsistencies++;
 				}
 				
 				
@@ -598,14 +631,17 @@ public class ConsistencyChecker {
 					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres.getTime()+" but received "+timeStamp_MySQL.getTime());
 					query+= " UPDATE transactions SET created_at = ? WHERE id = "+id_MySQL+";";
 					timeStampInconsistency = true;
+					inconsistencies++;
 				}
 				if(budgetId_Postgres != budgetId_MySQL){
 					LOGGER.debug("budget_id inconsistency: expected "+budgetId_Postgres+" but received "+budgetId_MySQL);
 					query+= " UPDATE transactions SET budget_id = "+budgetId_Postgres+" WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 				if(recurringId_Postgres != recurringId_MySQL){
 					LOGGER.debug("recurring_id inconsistency: expected "+recurringId_Postgres+" but received "+recurringId_MySQL);
 					query+= " UPDATE transactions SET recurring_id = "+recurringId_Postgres+" WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 
 
