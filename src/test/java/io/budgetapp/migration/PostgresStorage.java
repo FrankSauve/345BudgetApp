@@ -18,7 +18,7 @@ public class PostgresStorage{
 	
 	private Connection conPostgres;
 	
-	public void connectToPostgresDatabase(Connection con) {
+	PostgresStorage(Connection con) {
 		conPostgres = con;
 	}
 	

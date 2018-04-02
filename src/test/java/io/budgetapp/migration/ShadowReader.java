@@ -33,7 +33,7 @@ public class ShadowReader {
 
 	public void connectToDatabases() {
 		mySQLStorage = new MySQLStorage(conMySQL);
-		postgresStorage.connectToPostgresDatabase(conPostgres);
+		postgresStorage = new PostgresStorage(conPostgres);
 	}
 
 	public int shadowReadUser(){

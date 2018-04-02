@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
-public class MySQLStorage extends PostgresStorage{
+public class MySQLStorage{
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MigrationTest.class);
 
