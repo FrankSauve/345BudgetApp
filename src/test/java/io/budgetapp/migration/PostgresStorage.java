@@ -18,9 +18,10 @@ public class PostgresStorage{
 	
 	private Connection conPostgres;
 	
-	PostgresStorage(Connection con){
+	public void connectToPostgresDatabase(Connection con) {
 		conPostgres = con;
 	}
+	
 	/**
 	 * Insert into user table
 	 */

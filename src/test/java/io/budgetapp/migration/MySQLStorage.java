@@ -13,14 +13,20 @@ import org.slf4j.Logger;
 import org.junit.Test;
 import org.slf4j.LoggerFactory;
 
-public class MySQLStorage{
+public class MySQLStorage extends PostgresStorage{
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(MigrationTest.class);
 
 	private Connection conMySQL;
+	
+	int inconsistencies = 0;
 
 	MySQLStorage(Connection con){
 		conMySQL = con;
+	}
+	
+	public int getReadInconsistencies() {
+		return inconsistencies;
 	}
 
 	/**
