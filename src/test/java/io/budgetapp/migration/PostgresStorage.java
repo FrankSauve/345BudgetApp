@@ -83,8 +83,8 @@ public class PostgresStorage{
 	public void insertBudgets(String name, double projected, double actual, Date periodOn, Timestamp timeStamp, int userId, int categoryId, int typeId) {
 		try {
 			//Disable foreign key checks
-			Statement disableFKChecks = conPostgres.createStatement();
-			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
+			//Statement disableFKChecks = conPostgres.createStatement();
+			//disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
 
 			// Inserting data
 			String query = " INSERT INTO budgets (name, projected, actual, period_on, created_at, user_id, category_id, type_id)"
@@ -108,8 +108,8 @@ public class PostgresStorage{
 			}
 
 			//Enable foreign key checks
-			Statement enableFKChecks = conPostgres.createStatement();
-			enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+			//Statement enableFKChecks = conPostgres.createStatement();
+			//enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
 
 		} catch (SQLException e) {
 			e.printStackTrace();

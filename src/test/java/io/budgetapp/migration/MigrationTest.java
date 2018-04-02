@@ -120,7 +120,7 @@ public class MigrationTest{
 			
 			//shadowWriter.shadowWriteUser();
 			shadowWriter.shadowWriteBudgetType();
-			
+			shadowWriter.shadowWriteBudget();
 			
 			shadowWriter.close();
 			
