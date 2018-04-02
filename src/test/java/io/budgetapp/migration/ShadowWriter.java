@@ -2,13 +2,8 @@ package io.budgetapp.migration;
 
 import java.sql.Connection;
 import java.sql.Date;
-import java.sql.DriverManager;
-import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
 import java.sql.Timestamp;
-
-import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -132,7 +127,7 @@ public class ShadowWriter {
 	}
 
 	public void shadowWriteTransactions() {
-		
+
 		//The transaction data
 		String name = "Test";
 		int amount = 24; 
@@ -146,7 +141,7 @@ public class ShadowWriter {
 		//Shadow writing to transactions table 
 		mySQLStorage.insertTransactions(name, amount, remark, auto, transactionOn, timeStamp, budgetId, recurringId);
 		postgresStorage.insertTransactions(name, amount, remark, auto, transactionOn, timeStamp, budgetId, recurringId);
-		
+
 		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
 		checker.checkUsers();
 

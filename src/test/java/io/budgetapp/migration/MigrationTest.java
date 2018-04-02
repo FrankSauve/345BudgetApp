@@ -18,7 +18,7 @@ public class MigrationTest{
 
 	String host2 = "jdbc:mysql://localhost:3306/345BudgetApp";
 	String username2 = "root";
-	String password2 = "";
+	String password2 = "root";
 
 	MySQLStorage mySQLStorage;
 
@@ -79,24 +79,48 @@ public class MigrationTest{
 		LOGGER.info("*********Deactivating Consistency Checker***********");
 	}
 
+	private void shadowWrite() {
+
+		try {
+			Connection conPostgres = DriverManager.getConnection(host1,username1,password1);
+			Connection conMySQL = DriverManager.getConnection(host2,username2,password2);
+
+			ShadowWriter shadowWriter = new ShadowWriter(conPostgres, conMySQL);
+
+			shadowWriter.connectToDatabases();
+
+			shadowWriter.shadowWriteUser();
+			shadowWriter.shadowWriteBudgetType();
+			shadowWriter.shadowWriteBudget();
+			shadowWriter.shadowWriteCategories();
+			shadowWriter.shadowWriteRecurrings();
+
+			shadowWriter.close();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+
 
 	@Test
 	public void migrationTest() {
 
 		// forklift the data from old storage to new 
-//		forklift();
+		forklift();
 
 		// check for inconsistencies and fixed them
-//		checkAll();
+		checkAll();
 
 
 		//Start consistency checker asynchronously
-//		new Thread( new Runnable() {
-//			public void run(){
-//				checkAll();
-//				return; 
-//			}
-//		}).start();
+		new Thread( new Runnable() {
+			public void run(){
+				checkAll();
+				return; 
+			}
+		}).start();
 
 
 		//shadow writes
@@ -105,32 +129,6 @@ public class MigrationTest{
 		// shadow reads for validation 
 
 
-	}
-
-
-	private void shadowWrite() {
-		
-		try {
-			Connection conPostgres = DriverManager.getConnection(host1,username1,password1);
-			Connection conMySQL = DriverManager.getConnection(host2,username2,password2);
-
-			ShadowWriter shadowWriter = new ShadowWriter(conPostgres, conMySQL);
-			
-			shadowWriter.connectToDatabases();
-			
-			//shadowWriter.shadowWriteUser();
-			//shadowWriter.shadowWriteBudgetType();
-			//shadowWriter.shadowWriteBudget();
-			//shadowWriter.shadowWriteCategories();
-			//shadowWriter.shadowWriteRecurrings();
-			
-			shadowWriter.close();
-			
-		} catch (SQLException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
 	}
 
 }

@@ -18,7 +18,7 @@ public class MySQLStorage{
 	private static final Logger LOGGER = LoggerFactory.getLogger(MigrationTest.class);
 
 	private Connection conMySQL;
-	
+
 	MySQLStorage(Connection con){
 		conMySQL = con;
 	}
@@ -29,7 +29,7 @@ public class MySQLStorage{
 	public void insertUsers(String username, String password, String name, Timestamp timeStamp, String currency) {
 
 		try {
-			
+
 			// Inserting data
 			String query = " INSERT INTO users (username, password, name, created_at, currency)"
 					+ " VALUES (?, ?, ?, ?, ?)";
@@ -81,7 +81,7 @@ public class MySQLStorage{
 	 */
 	public void insertBudgets(String name, double projected, double actual, Date periodOn, Timestamp timeStamp, int userId, int categoryId, int typeId) {
 		try {
-			
+
 			//Disable foreign key checks
 			Statement disableFKChecks = conMySQL.createStatement();
 			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
@@ -121,7 +121,7 @@ public class MySQLStorage{
 	 */
 	public void insertCategories(int id, String name, String type, Timestamp timeStamp, int userId) {
 		try {
-			
+
 			//Disable foreign key checks
 			Statement disableFKChecks = conMySQL.createStatement();
 			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
@@ -157,7 +157,7 @@ public class MySQLStorage{
 	 */
 	public void insertRecurrings(double amount, String type, Timestamp lastRun, Timestamp timeStamp, int budgetTypeId, String remark){
 		try {
-			
+
 			//Disable foreign key checks
 			Statement disableFKChecks = conMySQL.createStatement();
 			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");

@@ -12,23 +12,23 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ForkLifter {
-	
+
 	private Connection conPostgres;
 	private Connection conMySQL;
 	MySQLStorage mySQLStorage;
-	
+
 	private static final Logger LOGGER = LoggerFactory.getLogger(ForkLifter.class);
-	
+
 	ForkLifter(Connection conPostgres, Connection conMySQL){
 		this.conPostgres = conPostgres;
 		this.conMySQL = conMySQL;
 	}
-	
+
 	public void close() throws SQLException {
 		conMySQL.close();
 		conPostgres.close();
 	}
-	
+
 	/**
 	 * Migrates the user table
 	 */
@@ -137,13 +137,13 @@ public class ForkLifter {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Migrate the categories table
 	 */
 	public void forkliftCategories() {
 		LOGGER.info("**************Forklift categories***************");
-		
+
 		try {
 
 			Statement stmtPostgres = conPostgres.createStatement( );
@@ -172,7 +172,7 @@ public class ForkLifter {
 			e.printStackTrace();
 		}
 	}
-	
+
 	/**
 	 * Migrate the recurrings tables
 	 */
