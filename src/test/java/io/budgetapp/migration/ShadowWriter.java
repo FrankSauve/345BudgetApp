@@ -67,7 +67,7 @@ public class ShadowWriter {
 		postgresStorage.insertBudgetTypes(timeStamp);
 
 		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
-		checker.checkUsers();
+		checker.checkBudgetTypes();
 	}
 
 	public void shadowWriteBudget() {
@@ -87,7 +87,7 @@ public class ShadowWriter {
 		postgresStorage.insertBudgets(name, projected, actual, periodOn, timeStamp, userId, categoryId, typeId);
 
 		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
-		checker.checkUsers();
+		checker.checkBudgets();
 	}
 
 	public void shadowWriteCategories() {
@@ -104,7 +104,7 @@ public class ShadowWriter {
 		postgresStorage.insertCategories(id, name, type, timeStamp, userId);
 
 		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
-		checker.checkUsers();
+		checker.checkCategories();
 	}
 
 	public void shadowWriteRecurrings() {
@@ -122,7 +122,7 @@ public class ShadowWriter {
 		postgresStorage.insertRecurrings(amount, type, lastRun, timeStamp, budgetTypeId, remark);
 
 		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
-		checker.checkUsers();
+		checker.checkRecurrings();
 
 	}
 
@@ -143,7 +143,7 @@ public class ShadowWriter {
 		postgresStorage.insertTransactions(name, amount, remark, auto, transactionOn, timeStamp, budgetId, recurringId);
 
 		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
-		checker.checkUsers();
+		checker.checkTransactions();
 
 	}
 
