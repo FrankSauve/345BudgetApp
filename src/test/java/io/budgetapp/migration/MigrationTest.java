@@ -119,8 +119,10 @@ public class MigrationTest{
 			shadowWriter.connectToDatabases();
 			
 			//shadowWriter.shadowWriteUser();
-			shadowWriter.shadowWriteBudgetType();
-			shadowWriter.shadowWriteBudget();
+			//shadowWriter.shadowWriteBudgetType();
+			//shadowWriter.shadowWriteBudget();
+			shadowWriter.shadowWriteCategories();
+			
 			
 			shadowWriter.close();
 			

@@ -94,5 +94,22 @@ public class ShadowWriter {
 		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
 		checker.checkUsers();
 	}
+	
+	public void shadowWriteCategories() {
+
+		// The Categories Data
+		int id = 2001;
+		String name = "Testing"; 
+		String type = "INCOME";
+		Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
+		int userId = 20000;
+
+		// Shadow writing to categories table
+		mySQLStorage.insertCategories(id, name, type, timeStamp, userId);
+		postgresStorage.insertCategories(id, name, type, timeStamp, userId);
+
+		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
+		checker.checkUsers();
+	}
 
 }
