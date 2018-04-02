@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+
+import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +43,9 @@ public class PostgresStorage{
 				preparedStmt.execute();
 			}
 			catch (SQLIntegrityConstraintViolationException  e) {
+				LOGGER.error("username " + username + " already exists");
+			}
+			catch (PSQLException  e) {
 				LOGGER.error("username " + username + " already exists");
 			}
 
@@ -78,8 +83,8 @@ public class PostgresStorage{
 	public void insertBudgets(String name, double projected, double actual, Date periodOn, Timestamp timeStamp, int userId, int categoryId, int typeId) {
 		try {
 			//Disable foreign key checks
-			Statement disableFKChecks = conPostgres.createStatement();
-			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
+			//Statement disableFKChecks = conPostgres.createStatement();
+			//disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
 
 			// Inserting data
 			String query = " INSERT INTO budgets (name, projected, actual, period_on, created_at, user_id, category_id, type_id)"
@@ -103,8 +108,8 @@ public class PostgresStorage{
 			}
 
 			//Enable foreign key checks
-			Statement enableFKChecks = conPostgres.createStatement();
-			enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+			//Statement enableFKChecks = conPostgres.createStatement();
+			//enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
 
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -158,7 +163,7 @@ public class PostgresStorage{
 			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
 
 			// Inserting data
-			String query = " INSERT INTO recurrings (amount, type, last_run, created_at, budget_type_id)"
+			String query = " INSERT INTO recurrings (amount, type, last_run_at, created_at, budget_type_id)"
 					+ " VALUES (?, ?, ?, ?, ?)";
 			PreparedStatement preparedStmt = conPostgres.prepareStatement(query);
 			preparedStmt.setDouble(1, amount);
@@ -211,7 +216,9 @@ public class PostgresStorage{
 			}
 			catch (SQLIntegrityConstraintViolationException  e) {
 				LOGGER.error("transactions table insertion failed");
-				e.printStackTrace();
+			}
+			catch(PSQLException e) {
+				LOGGER.error("transactions table insertion failed");	
 			}
 
 			//Enable foreign key checks

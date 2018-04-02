@@ -79,6 +79,30 @@ public class MigrationTest{
 		LOGGER.info("*********Deactivating Consistency Checker***********");
 	}
 
+	private void shadowWrite() {
+
+		try {
+			Connection conPostgres = DriverManager.getConnection(host1,username1,password1);
+			Connection conMySQL = DriverManager.getConnection(host2,username2,password2);
+
+			ShadowWriter shadowWriter = new ShadowWriter(conPostgres, conMySQL);
+
+			shadowWriter.connectToDatabases();
+
+			shadowWriter.shadowWriteUser();
+			shadowWriter.shadowWriteBudgetType();
+			shadowWriter.shadowWriteBudget();
+			shadowWriter.shadowWriteCategories();
+			shadowWriter.shadowWriteRecurrings();
+
+			shadowWriter.close();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
+
 
 	@Test
 	public void migrationTest() {
@@ -100,7 +124,7 @@ public class MigrationTest{
 
 
 		//shadow writes
-
+		shadowWrite();
 
 		// shadow reads for validation 
 
