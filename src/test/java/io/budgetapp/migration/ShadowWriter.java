@@ -58,8 +58,22 @@ public class ShadowWriter {
 		checker.checkUsers();
 	}
 	
+	public void shadowWriteBudgetType() {
+		
+		// The Budget Type Data
+		Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
 
+
+		if(mySQLStorage == null) {
+			System.out.println("ERROR");
+		}
+		
+		// Shadow writing to budget-types table
+		mySQLStorage.insertBudgetTypes(timeStamp);
+		postgresStorage.insertBudgetTypes(timeStamp);
+		
+		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
+		checker.checkUsers();
+	}
 
 }
-
-
