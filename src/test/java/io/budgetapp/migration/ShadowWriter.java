@@ -91,15 +91,6 @@ public class ShadowWriter {
 		mySQLStorage.insertBudgets(name, projected, actual, periodOn, timeStamp, userId, categoryId, typeId);
 		postgresStorage.insertBudgets(name, projected, actual, periodOn, timeStamp, userId, categoryId, typeId);
 
-
-		if(mySQLStorage == null) {
-			System.out.println("ERROR");
-		}
-
-		// Shadow writing to budget-types table
-		mySQLStorage.insertBudgetTypes(timeStamp);
-		postgresStorage.insertBudgetTypes(timeStamp);
-
 		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
 		checker.checkUsers();
 	}
