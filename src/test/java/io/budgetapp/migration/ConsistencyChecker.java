@@ -31,8 +31,11 @@ public class ConsistencyChecker {
 	/**
 	 * Compares the user tables
 	 */
-	public void checkUsers(){
+	public int checkUsers(){
 		LOGGER.info("***************Checking Users*****************");
+		
+		int inconsistencies = 0;
+		
 		try {
 
 			Statement stmtPostgres = conPostgres.createStatement( );
@@ -68,14 +71,17 @@ public class ConsistencyChecker {
 				if(!username_Postgres.equals(username_MySQL)){
 					LOGGER.debug("username inconsistency: expected '"+username_Postgres+"' but received '"+username_MySQL+"'");
 					query+= " UPDATE users SET username = '"+username_Postgres+"' WHERE id = "+id_MySQL+";";
+					inconsistencies ++;
 				}
 				if(!password_Postgres.equals(password_MySQL)){
 					LOGGER.debug("password inconsistency: expected '"+password_Postgres+"' but received '"+password_MySQL+"'");
 					query+= " UPDATE users SET password = '"+password_Postgres+"' WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 				if(!name_Postgres.equals(name_MySQL)){
 					LOGGER.debug("name inconsistency: expected '"+name_Postgres+"' but received '"+name_MySQL+"'");
 					query+= " UPDATE users SET name = '"+name_Postgres+"' WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 
 
@@ -86,6 +92,7 @@ public class ConsistencyChecker {
 					LOGGER.debug("created_at inconsistency: expected "+timeStamp_Postgres.getTime()+" but received "+timeStamp_MySQL.getTime() + " at index " + id_MySQL);
 					query+= " UPDATE users SET created_at = ? WHERE id = "+id_MySQL+";";
 					hasTimeStampInconsistency = true;
+					inconsistencies++;
 				}
 
 				if (currency_Postgres == null && currency_MySQL == null) {
@@ -94,6 +101,7 @@ public class ConsistencyChecker {
 				else if(!currency_Postgres.equals(currency_MySQL)){
 					LOGGER.debug("currency inconsistency: expected '"+currency_Postgres+"' but received '"+currency_MySQL+"'");
 					query+= " UPDATE users SET currency = '"+currency_Postgres+"' WHERE id = "+id_MySQL+";";
+					inconsistencies++;
 				}
 
 				PreparedStatement preparedStmt = conMySQL.prepareStatement(query);
@@ -115,6 +123,8 @@ public class ConsistencyChecker {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+		
+		return inconsistencies;
 	}
 	/**
 	 * Compares the budget_types data
