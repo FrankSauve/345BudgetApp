@@ -7,6 +7,8 @@ import java.sql.SQLException;
 import java.sql.SQLIntegrityConstraintViolationException;
 import java.sql.Statement;
 import java.sql.Timestamp;
+
+import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -41,6 +43,9 @@ public class PostgresStorage{
 				preparedStmt.execute();
 			}
 			catch (SQLIntegrityConstraintViolationException  e) {
+				LOGGER.error("username " + username + " already exists");
+			}
+			catch (PSQLException  e) {
 				LOGGER.error("username " + username + " already exists");
 			}
 
@@ -211,7 +216,9 @@ public class PostgresStorage{
 			}
 			catch (SQLIntegrityConstraintViolationException  e) {
 				LOGGER.error("transactions table insertion failed");
-				e.printStackTrace();
+			}
+			catch(PSQLException e) {
+				LOGGER.error("transactions table insertion failed");	
 			}
 
 			//Enable foreign key checks
