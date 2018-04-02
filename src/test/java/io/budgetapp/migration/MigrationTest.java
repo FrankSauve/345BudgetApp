@@ -122,7 +122,7 @@ public class MigrationTest{
 			//shadowWriter.shadowWriteBudgetType();
 			//shadowWriter.shadowWriteBudget();
 			//shadowWriter.shadowWriteCategories();
-			shadowWriter.shadowWriteRecurrings();
+			//shadowWriter.shadowWriteRecurrings();
 			
 			shadowWriter.close();
 			

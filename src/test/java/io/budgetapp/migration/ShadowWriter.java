@@ -94,7 +94,7 @@ public class ShadowWriter {
 		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
 		checker.checkUsers();
 	}
-	
+
 	public void shadowWriteCategories() {
 
 		// The Categories Data
@@ -111,9 +111,9 @@ public class ShadowWriter {
 		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
 		checker.checkUsers();
 	}
-	
+
 	public void shadowWriteRecurrings() {
-		
+
 		//The recurrings data 
 		double amount = 34.0;
 		String type = "TESTING"; 
@@ -125,11 +125,31 @@ public class ShadowWriter {
 		// Shadow writing to recurrings table
 		mySQLStorage.insertRecurrings(amount, type, lastRun, timeStamp, budgetTypeId, remark);
 		postgresStorage.insertRecurrings(amount, type, lastRun, timeStamp, budgetTypeId, remark);
+
+		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
+		checker.checkUsers();
+
+	}
+
+	public void shadowWriteTransactions() {
+		
+		//The transaction data
+		String name = "Test";
+		int amount = 24; 
+		String remark = "TESTING";
+		boolean auto = true;
+		Timestamp transactionOn = new Timestamp(System.currentTimeMillis());
+		Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
+		int budgetId = 24;
+		int recurringId = 24;
+
+		//Shadow writing to transactions table 
+		mySQLStorage.insertTransactions(name, amount, remark, auto, transactionOn, timeStamp, budgetId, recurringId);
+		postgresStorage.insertTransactions(name, amount, remark, auto, transactionOn, timeStamp, budgetId, recurringId);
 		
 		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
 		checker.checkUsers();
 
 	}
-	
 
 }
