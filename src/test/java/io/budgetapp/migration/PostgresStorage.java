@@ -163,7 +163,7 @@ public class PostgresStorage{
 			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
 
 			// Inserting data
-			String query = " INSERT INTO recurrings (amount, type, last_run, created_at, budget_type_id)"
+			String query = " INSERT INTO recurrings (amount, type, last_run_at, created_at, budget_type_id)"
 					+ " VALUES (?, ?, ?, ?, ?)";
 			PreparedStatement preparedStmt = conPostgres.prepareStatement(query);
 			preparedStmt.setDouble(1, amount);
