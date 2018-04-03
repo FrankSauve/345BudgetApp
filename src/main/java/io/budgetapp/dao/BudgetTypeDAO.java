@@ -1,6 +1,8 @@
 package io.budgetapp.dao;
 
+import io.budgetapp.checker.ConsistencyChecker;
 import io.budgetapp.database.MySqlConnector;
+import io.budgetapp.database.PostgresConnector;
 import io.budgetapp.model.BudgetType;
 import io.dropwizard.hibernate.AbstractDAO;
 
@@ -33,6 +35,9 @@ public class BudgetTypeDAO extends AbstractDAO<BudgetType> {
 
     			try {
     				preparedStmt.execute();
+    				//Check consistency
+    				ConsistencyChecker checker = new ConsistencyChecker(PostgresConnector.getInstance().getPostgresConnection(), MySqlConnector.getInstance().getMySqlConnection());
+    				checker.checkBudgetTypes();
     			}
     			catch (SQLIntegrityConstraintViolationException  e) {
     				e.printStackTrace();

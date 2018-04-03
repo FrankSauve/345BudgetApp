@@ -1,6 +1,8 @@
 package io.budgetapp.dao;
 
+import io.budgetapp.checker.ConsistencyChecker;
 import io.budgetapp.database.MySqlConnector;
+import io.budgetapp.database.PostgresConnector;
 import io.budgetapp.model.Recurring;
 import io.budgetapp.model.RecurringType;
 import io.budgetapp.model.User;
@@ -51,6 +53,9 @@ public class RecurringDAO extends AbstractDAO<Recurring> {
 
     			try {
     				preparedStmt.execute();
+    				//Check consistency
+    				ConsistencyChecker checker = new ConsistencyChecker(PostgresConnector.getInstance().getPostgresConnection(), MySqlConnector.getInstance().getMySqlConnection());
+    				checker.checkRecurrings();
     			}
     			catch (SQLIntegrityConstraintViolationException  e) {
     				e.printStackTrace();

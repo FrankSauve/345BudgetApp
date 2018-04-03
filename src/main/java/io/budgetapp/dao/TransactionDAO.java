@@ -1,7 +1,9 @@
 package io.budgetapp.dao;
 
 import io.budgetapp.application.NotFoundException;
+import io.budgetapp.checker.ConsistencyChecker;
 import io.budgetapp.database.MySqlConnector;
+import io.budgetapp.database.PostgresConnector;
 import io.budgetapp.model.Transaction;
 import io.budgetapp.model.User;
 import io.budgetapp.model.form.report.SearchFilter;
@@ -61,6 +63,9 @@ public class TransactionDAO extends AbstractDAO<Transaction> {
 
     			try {
     				preparedStmt.execute();
+    				//Check consistency
+    				ConsistencyChecker checker = new ConsistencyChecker(PostgresConnector.getInstance().getPostgresConnection(), MySqlConnector.getInstance().getMySqlConnection());
+    				checker.checkTransactions();
     			}
     			catch (SQLIntegrityConstraintViolationException  e) {
     				LOGGER.error("transactions table insertion failed");

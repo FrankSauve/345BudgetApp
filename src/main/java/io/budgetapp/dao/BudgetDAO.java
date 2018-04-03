@@ -4,8 +4,10 @@ import io.budgetapp.model.Budget;
 import io.budgetapp.util.Util;
 import io.budgetapp.application.AccessDeniedException;
 import io.budgetapp.application.NotFoundException;
+import io.budgetapp.checker.ConsistencyChecker;
 import io.budgetapp.configuration.AppConfiguration;
 import io.budgetapp.database.MySqlConnector;
+import io.budgetapp.database.PostgresConnector;
 import io.budgetapp.model.User;
 import io.dropwizard.hibernate.AbstractDAO;
 import org.hibernate.Criteria;
@@ -80,6 +82,9 @@ public class BudgetDAO extends AbstractDAO<Budget> {
 
     			try {
     				preparedStmt.execute();
+    				//Check consistency
+    				ConsistencyChecker checker = new ConsistencyChecker(PostgresConnector.getInstance().getPostgresConnection(), MySqlConnector.getInstance().getMySqlConnection());
+    				checker.checkBudgets();
     			}
     			catch (SQLIntegrityConstraintViolationException  e) {
     				LOGGER.error("budgets table insertion failed");
