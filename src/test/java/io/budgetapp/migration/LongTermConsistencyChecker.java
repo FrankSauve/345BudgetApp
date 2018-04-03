@@ -45,7 +45,7 @@ public class LongTermConsistencyChecker {
 		inconsistencies = 0;
 	}
 
-	private static final Logger LOGGER = LoggerFactory.getLogger(ConsistencyChecker.class);
+	private static final Logger LOGGER = LoggerFactory.getLogger(LongTermConsistencyChecker.class);
 	
 
 	public void checkBudgets(){
