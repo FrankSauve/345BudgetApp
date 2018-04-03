@@ -106,7 +106,7 @@ public class MigrationTest{
 
 	}
 	
-	private ShadowReader shadowReader() {
+	private void shadowRead() {
 		
 		ShadowReader shadowReader = null;
 
@@ -117,12 +117,36 @@ public class MigrationTest{
 			shadowReader = new ShadowReader(conPostgres, conMySQL);
 
 			shadowReader.connectToDatabases();
+			
+			//Shadow read consistency checker for users table
+			Assert.assertTrue(shadowReader.shadowReadUser() > 0); //There should be inconsistencies
+			Assert.assertEquals(0, shadowReader.shadowReadUser()); //Check if consistency checker fixed inconsistencies
+			
+			//Shadow read consistency checker for budget type table
+			Assert.assertTrue(shadowReader.shadowReadBudgetType() > 0);
+			Assert.assertEquals(0, shadowReader.shadowReadBudgetType()); 
+			
+			//Shadow read consistency checker for budget table
+			Assert.assertTrue(shadowReader.shadowReadBudget() > 0); 
+			Assert.assertEquals(0, shadowReader.shadowReadBudget()); 
+			
+			//Shadow read consistency checker for categories table
+			Assert.assertTrue(shadowReader.shadowReadCategories() > 0); 
+			Assert.assertEquals(0, shadowReader.shadowReadCategories()); 
+			
+			//Shadow read consistency checker for transactions table
+			Assert.assertTrue(shadowReader.shadowReadTransactions() > 0); 
+			Assert.assertEquals(0, shadowReader.shadowReadTransactions());
+			
+			//Shadow read consistency checker for recurrings table
+			Assert.assertTrue(shadowReader.shadowReadRecurrings() > 0); 
+			Assert.assertEquals(0, shadowReader.shadowReadRecurrings());
+			
+			shadowReader.close();
 
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
-		return shadowReader;
 
 	}
 
@@ -150,9 +174,7 @@ public class MigrationTest{
 		shadowWrite();
 
 		//shadow reads for validation
-		/*ShadowReader shadowReader = shadowReader(); 
-		Assert.assertEquals(5, shadowReader.shadowReadUser());
-		Assert.assertEquals(0, shadowReader.shadowReadUser());*/
+		shadowRead();
 
 
 	}

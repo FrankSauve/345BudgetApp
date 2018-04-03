@@ -675,6 +675,10 @@ public class ConsistencyChecker {
 			e.printStackTrace();
 		}
 	}
+	
+	public void resetConsistencyChecker() {
+		inconsistencies = 0;
+	}
 
 
 }
