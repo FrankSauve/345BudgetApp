@@ -1,5 +1,6 @@
 # Budget App [![Build Status](https://travis-ci.org/FrankSauve/345BudgetApp.svg?branch=master)](https://travis-ci.org/FrankSauve/345BudgetApp)
 
+**BUILD IS FAILING BECAUSE WE ARE CALLING A LOCAL DATABASE IN PRODUCTION CODE**
 Budget App is open source personal budgeting application.
 
 ### Demo is available [here](https://demo.budgetapp.io/)
