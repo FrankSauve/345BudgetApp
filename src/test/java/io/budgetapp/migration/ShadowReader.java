@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import io.budgetapp.resource.ResourceIT;
+import junit.framework.Assert;
 
 public class ShadowReader {
 
@@ -34,9 +35,7 @@ public class ShadowReader {
 		postgresStorage = new PostgresStorage(conPostgres);
 	}
 
-	public long shadowReadUser(){
-		
-		long inconsistencies = 0;
+	public void shadowReadUser(){
 		
 		//The user data
 		String username = ResourceIT.randomEmail();
@@ -50,20 +49,23 @@ public class ShadowReader {
 			postgresStorage.insertUsers(username, password, name, timeStamp, currency);	
 			
 			ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
-			checker.checkUsers();
 			
-			inconsistencies = checker.getNumInconsistencies();
+			checker.checkUsers();
+			Assert.assertTrue(checker.getNumInconsistencies() > 0); //There should be inconsistencies
+			
+			checker.resetConsistencyChecker();
+			
+			checker.checkUsers();
+			Assert.assertEquals(0, checker.getNumInconsistencies()); //inconsistencies should be fixed now
+			
+			checker.close();
 		}
 		catch(Exception e) {
 			System.out.println("CAUGHT");
 		}
-		
-		return inconsistencies;
 	}
 	
-	public long shadowReadBudgetType() {
-		
-		long inconsistencies = 0;
+	public void shadowReadBudgetType() {
 
 		// The Budget Type Data
 		Timestamp timeStamp = new Timestamp(System.currentTimeMillis());
@@ -77,22 +79,23 @@ public class ShadowReader {
 			postgresStorage.insertBudgetTypes(timeStamp);
 
 			ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
+			
 			checker.checkBudgetTypes();
+			Assert.assertTrue(checker.getNumInconsistencies() > 0); //There should be inconsistencies
 			
-			inconsistencies = checker.getNumInconsistencies();
+			checker.resetConsistencyChecker();
 			
-			checker.resetConsistencyChecker(); 
+			checker.checkBudgetTypes();
+			Assert.assertEquals(0, checker.getNumInconsistencies()); //inconsistencies should be fixed now 
+			
+			checker.close();
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 		}
-		
-		return inconsistencies;
 	}
 
-	public long shadowReadBudget() {
-		
-		long inconsistencies = 0;
+	public void shadowReadBudget() {
 
 		// The Budget Data
 		String name = ResourceIT.randomAlphabets();
@@ -109,24 +112,23 @@ public class ShadowReader {
 			postgresStorage.insertBudgets(name, projected, actual, periodOn, timeStamp, userId, categoryId, typeId);
 
 			ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
+			
 			checker.checkBudgets();
-			
-			inconsistencies = checker.getNumInconsistencies();
-			
-			checker.getNumInconsistencies();
+			Assert.assertTrue(checker.getNumInconsistencies() > 0); //There should be inconsistencies
 			
 			checker.resetConsistencyChecker();
+			
+			checker.checkBudgets();
+			Assert.assertEquals(0, checker.getNumInconsistencies()); //inconsistencies should be fixed now
+			
+			checker.close();
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 		}
-		
-		return inconsistencies;
 	}
 
-	public long shadowReadCategories() {
-		
-		long inconsistencies = 0;
+	public void shadowReadCategories() {
 
 		// The Categories Data
 		int id = 2001;
@@ -140,22 +142,23 @@ public class ShadowReader {
 			postgresStorage.insertCategories(id, name, type, timeStamp, userId);
 
 			ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
-			checker.checkCategories();
 			
-			inconsistencies = checker.getNumInconsistencies();
+			checker.checkCategories();
+			Assert.assertTrue(checker.getNumInconsistencies() > 0); //There should be inconsistencies
 			
 			checker.resetConsistencyChecker();
+			
+			checker.checkCategories();
+			Assert.assertEquals(0, checker.getNumInconsistencies()); //inconsistencies should be fixed now
+			
+			checker.close();
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 		}
-		
-		return inconsistencies;
 	}
 
-	public long shadowReadRecurrings() {
-		
-		long inconsistencies = 0;
+	public void shadowReadRecurrings() {
 
 		//The recurrings data 
 		double amount = 34.0;
@@ -170,23 +173,24 @@ public class ShadowReader {
 			postgresStorage.insertRecurrings(amount, type, lastRun, timeStamp, budgetTypeId, remark);
 
 			ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
-			checker.checkRecurrings();
 			
-			inconsistencies = checker.getNumInconsistencies();
+			checker.checkRecurrings();
+			Assert.assertTrue(checker.getNumInconsistencies() > 0); //There should be inconsistencies
 			
 			checker.resetConsistencyChecker();
+			
+			checker.checkRecurrings();
+			Assert.assertEquals(0, checker.getNumInconsistencies()); //inconsistencies should be fixed now
+			
+			checker.close();
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 		}
-		
-		return inconsistencies;
 	}
 
-	public long shadowReadTransactions() {
+	public void shadowReadTransactions() {
 		
-		long inconsistencies = 0;
-
 		//The transaction data
 		String name = ResourceIT.randomAlphabets();
 		int amount = 24; 
@@ -202,17 +206,20 @@ public class ShadowReader {
 			postgresStorage.insertTransactions(name, amount, remark, auto, transactionOn, timeStamp, budgetId, recurringId);
 
 			ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
-			checker.checkTransactions();
 			
-			inconsistencies = checker.getNumInconsistencies();
+			checker.checkTransactions();
+			Assert.assertTrue(checker.getNumInconsistencies() > 0); //There should be inconsistencies
 			
 			checker.resetConsistencyChecker();
+			
+			checker.checkTransactions();
+			Assert.assertEquals(0, checker.getNumInconsistencies()); //inconsistencies should be fixed now
+			
+			checker.close();
 		}
 		catch(Exception e) {
 			e.printStackTrace();
 		}
-		
-		return inconsistencies;
 
 	}
 	

@@ -118,29 +118,13 @@ public class MigrationTest{
 
 			shadowReader.connectToDatabases();
 			
-			//Shadow read consistency checker for users table
-			Assert.assertTrue(shadowReader.shadowReadUser() > 0); //There should be inconsistencies
-			Assert.assertEquals(0, shadowReader.shadowReadUser()); //Check if consistency checker fixed inconsistencies
-			
-			//Shadow read consistency checker for budget type table
-			Assert.assertTrue(shadowReader.shadowReadBudgetType() > 0);
-			Assert.assertEquals(0, shadowReader.shadowReadBudgetType()); 
-			
-			//Shadow read consistency checker for budget table
-			Assert.assertTrue(shadowReader.shadowReadBudget() > 0); 
-			Assert.assertEquals(0, shadowReader.shadowReadBudget()); 
-			
-			//Shadow read consistency checker for categories table
-			Assert.assertTrue(shadowReader.shadowReadCategories() > 0); 
-			Assert.assertEquals(0, shadowReader.shadowReadCategories()); 
-			
-			//Shadow read consistency checker for transactions table
-			Assert.assertTrue(shadowReader.shadowReadTransactions() > 0); 
-			Assert.assertEquals(0, shadowReader.shadowReadTransactions());
-			
-			//Shadow read consistency checker for recurrings table
-			Assert.assertTrue(shadowReader.shadowReadRecurrings() > 0); 
-			Assert.assertEquals(0, shadowReader.shadowReadRecurrings());
+			//Shadow reads consistency checker for the db tables
+			shadowReader.shadowReadUser();
+			shadowReader.shadowReadBudget();
+			shadowReader.shadowReadCategories();
+			shadowReader.shadowReadRecurrings();
+			shadowReader.shadowReadBudgetType();
+			shadowReader.shadowReadTransactions();
 			
 			shadowReader.close();
 
