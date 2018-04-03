@@ -11,6 +11,7 @@ import io.budgetapp.dao.BudgetTypeDAO;
 import io.budgetapp.dao.RecurringDAO;
 import io.budgetapp.dao.TransactionDAO;
 import io.budgetapp.dao.UserDAO;
+import io.budgetapp.database.MySqlConnector;
 import io.budgetapp.model.AccountSummary;
 import io.budgetapp.model.AuthToken;
 import io.budgetapp.model.Budget;
@@ -37,6 +38,10 @@ import io.budgetapp.util.Util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
@@ -78,7 +83,7 @@ public class FinanceService {
     //==================================================================
     // USER
     //==================================================================
-    public User addUser(SignUpForm signUp) {
+    public User addUser(SignUpForm signUp)  {
         Optional<User> optional = userDAO.findByUsername(signUp.getUsername());
         if(optional.isPresent()) {
             throw new DataConstraintException("username", "Username already taken.");
@@ -88,6 +93,7 @@ public class FinanceService {
         LocalDate now = LocalDate.now();
         // init account
         initCategoriesAndBudgets(user, now.getMonthValue(), now.getYear());
+        
         return user;
     }
     

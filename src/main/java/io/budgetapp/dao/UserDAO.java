@@ -1,6 +1,7 @@
 package io.budgetapp.dao;
 
 import io.budgetapp.application.NotFoundException;
+import io.budgetapp.database.MySqlConnector;
 import io.budgetapp.model.User;
 import io.budgetapp.model.form.SignUpForm;
 import io.dropwizard.hibernate.AbstractDAO;
@@ -10,6 +11,10 @@ import org.hibernate.criterion.Restrictions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,8 +43,28 @@ public class UserDAO extends AbstractDAO<User> {
         user.setUsername(signUp.getUsername());
         user.setPassword(signUp.getPassword());
         user = persist(user);
-        System.out.println("USERNAME HERE: " + signUp.getUsername());
-        System.out.println("PASSWORD HERE: " + signUp.getPassword());
+        
+        //***BEGIN Shadow write to mysql***
+        String query = " INSERT INTO users (username, password, created_at)"
+				+ " VALUES (?, ?, ?)";
+        PreparedStatement preparedStmt;
+		try {
+			preparedStmt = MySqlConnector.getInstance().getMySqlConnection().prepareStatement(query);
+			preparedStmt.setString(1, signUp.getUsername());
+			preparedStmt.setString(2, signUp.getPassword());
+			preparedStmt.setTimestamp(3,  new Timestamp(new java.util.Date().getTime()) );
+			try {
+				System.out.println("ADD EXECUTED: " + preparedStmt);
+				preparedStmt.execute();
+			}
+			catch (SQLIntegrityConstraintViolationException  e) {
+				e.printStackTrace();
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+		//***END Shadow write to mysql
+		
         return user;
     }
 
