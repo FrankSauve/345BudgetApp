@@ -158,7 +158,7 @@ public class MigrationTest{
 		shadowWrite();
 
 		//shadow reads for validation
-		shadowRead();
+		//shadowRead();
 
 
 	}
