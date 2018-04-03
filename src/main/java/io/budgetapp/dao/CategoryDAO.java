@@ -84,6 +84,7 @@ public class CategoryDAO extends DefaultDAO<Category> {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+        //***END Shadow write to mysql***
         
         return persist(category);
     }
