@@ -16,8 +16,6 @@ public class ShadowReader {
 	private Connection conMySQL;
 	MySQLStorage mySQLStorage;
 	PostgresStorage postgresStorage;
-	
-	int inconsistenciesUser = 0;
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(ShadowWriter.class);
 
@@ -36,7 +34,9 @@ public class ShadowReader {
 		postgresStorage = new PostgresStorage(conPostgres);
 	}
 
-	public int shadowReadUser(){
+	public long shadowReadUser(){
+		
+		long inconsistencies = 0;
 		
 		//The user data
 		String username = ResourceIT.randomEmail();
@@ -48,15 +48,19 @@ public class ShadowReader {
 		try {
 			//Only insert user in postgres database for test purposes
 			postgresStorage.insertUsers(username, password, name, timeStamp, currency);	
+			
+			ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
+			checker.checkUsers();
+			
+			inconsistencies = checker.getNumInconsistencies();
+			
+			checker.close();
 		}
 		catch(Exception e) {
 			System.out.println("CAUGHT");
 		}
-
-		ConsistencyChecker checker = new ConsistencyChecker(conPostgres, conMySQL);
-		inconsistenciesUser = checker.checkUsers();
 		
-		return inconsistenciesUser;
+		return inconsistencies;
 	}
 	
 }

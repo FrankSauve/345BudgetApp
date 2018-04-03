@@ -28,7 +28,7 @@ public class ShadowWriter {
 
 	public void connectToDatabases() {
 		mySQLStorage = new MySQLStorage(conMySQL);
-		postgresStorage.connectToPostgresDatabase(conPostgres);
+		postgresStorage = new PostgresStorage(conPostgres);
 	}
 
 	public void shadowWriteUser(){

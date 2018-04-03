@@ -39,10 +39,8 @@ public class ConsistencyChecker {
 	/**
 	 * Compares the user tables
 	 */
-	public int checkUsers(){
+	public void checkUsers(){
 		LOGGER.info("***************Checking Users*****************");
-		
-		int inconsistencies = 0;
 		
 		try {
 
@@ -132,8 +130,6 @@ public class ConsistencyChecker {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		
-		return inconsistencies;
 	}
 	/**
 	 * Compares the budget_types data
