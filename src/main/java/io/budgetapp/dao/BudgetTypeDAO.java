@@ -24,23 +24,26 @@ public class BudgetTypeDAO extends AbstractDAO<BudgetType> {
         BudgetType budgetType = new BudgetType();
         
         //***BEGIN Shadow write to mysql***
-        try {
-			// Inserting data
-			String query = " INSERT INTO budget_types (created_at) VALUES (?)";
-			PreparedStatement preparedStmt = MySqlConnector.getInstance().getMySqlConnection().prepareStatement(query);
-			preparedStmt.setTimestamp(1, new Timestamp(new java.util.Date().getTime()));
+        if(MySqlConnector.getInstance().isUseMySql()) {
+        	try {
+    			// Inserting data
+    			String query = " INSERT INTO budget_types (created_at) VALUES (?)";
+    			PreparedStatement preparedStmt = MySqlConnector.getInstance().getMySqlConnection().prepareStatement(query);
+    			preparedStmt.setTimestamp(1, new Timestamp(new java.util.Date().getTime()));
 
-			try {
-				preparedStmt.execute();
-			}
-			catch (SQLIntegrityConstraintViolationException  e) {
-				e.printStackTrace();
-			}
+    			try {
+    				preparedStmt.execute();
+    			}
+    			catch (SQLIntegrityConstraintViolationException  e) {
+    				e.printStackTrace();
+    			}
 
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-        //***END Shadow write to mysql ***
+    		} catch (SQLException e) {
+    			e.printStackTrace();
+    		}
+            //***END Shadow write to mysql ***
+        }
+        
         
         return persist(budgetType);
     }

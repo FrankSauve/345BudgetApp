@@ -32,37 +32,40 @@ public class RecurringDAO extends AbstractDAO<Recurring> {
     public Recurring addRecurring(Recurring recurring) {
     	
     	//***BEGIN Shadow write to mysql***
-    	try {
+    	if(MySqlConnector.getInstance().isUseMySql()) {
+    		try {
 
-			//Disable foreign key checks
-			Statement disableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
-			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
+    			//Disable foreign key checks
+    			Statement disableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
+    			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
 
-			// Inserting data 
-			String query = " INSERT INTO recurrings (amount, type, last_run_at, created_at, budget_type_id)"
-					+ " VALUES (?, ?, ?, ?, ?)";
-			PreparedStatement preparedStmt = MySqlConnector.getInstance().getMySqlConnection().prepareStatement(query);
-			preparedStmt.setDouble(1, recurring.getAmount());
-			preparedStmt.setString(2, recurring.getRecurringTypeDisplay());
-			preparedStmt.setTimestamp(3, (Timestamp) recurring.getLastRunAt());
-			preparedStmt.setTimestamp(4, new Timestamp(new java.util.Date().getTime()));
-			preparedStmt.setLong(5, recurring.getBudgetType().getId());
+    			// Inserting data 
+    			String query = " INSERT INTO recurrings (amount, type, last_run_at, created_at, budget_type_id)"
+    					+ " VALUES (?, ?, ?, ?, ?)";
+    			PreparedStatement preparedStmt = MySqlConnector.getInstance().getMySqlConnection().prepareStatement(query);
+    			preparedStmt.setDouble(1, recurring.getAmount());
+    			preparedStmt.setString(2, recurring.getRecurringTypeDisplay());
+    			preparedStmt.setTimestamp(3, (Timestamp) recurring.getLastRunAt());
+    			preparedStmt.setTimestamp(4, new Timestamp(new java.util.Date().getTime()));
+    			preparedStmt.setLong(5, recurring.getBudgetType().getId());
 
-			try {
-				preparedStmt.execute();
-			}
-			catch (SQLIntegrityConstraintViolationException  e) {
-				e.printStackTrace();
-			}
+    			try {
+    				preparedStmt.execute();
+    			}
+    			catch (SQLIntegrityConstraintViolationException  e) {
+    				e.printStackTrace();
+    			}
 
-			//Enable foreign key checks
-			Statement enableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
-			enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+    			//Enable foreign key checks
+    			Statement enableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
+    			enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
 
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-    	//***END Shadow write to mysql***
+    		} catch (SQLException e) {
+    			e.printStackTrace();
+    		}
+        	//***END Shadow write to mysql***
+    	}
+    	
     	
         return persist(recurring);
     }

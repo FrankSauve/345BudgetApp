@@ -54,37 +54,40 @@ public class CategoryDAO extends DefaultDAO<Category> {
         category.setUser(user);
         
         //***BEGIN Shadow write to mysql***
-        try {
+        if(MySqlConnector.getInstance().isUseMySql()) {
+        	try {
 
-			//Disable foreign key checks
-			Statement disableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
-			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
+    			//Disable foreign key checks
+    			Statement disableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
+    			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
 
-			// Inserting data
-			String query = " INSERT INTO categories (name, type, created_at, user_id)"
-					+ " VALUES (?, ?, ?, ?)";
-			PreparedStatement preparedStmt = MySqlConnector.getInstance().getMySqlConnection().prepareStatement(query);
-			preparedStmt.setString(1, category.getName());
-			preparedStmt.setString(2, category.getType().toString());
-			preparedStmt.setTimestamp(3, new Timestamp(new java.util.Date().getTime()));
-			preparedStmt.setLong(4, user.getId());
+    			// Inserting data
+    			String query = " INSERT INTO categories (name, type, created_at, user_id)"
+    					+ " VALUES (?, ?, ?, ?)";
+    			PreparedStatement preparedStmt = MySqlConnector.getInstance().getMySqlConnection().prepareStatement(query);
+    			preparedStmt.setString(1, category.getName());
+    			preparedStmt.setString(2, category.getType().toString());
+    			preparedStmt.setTimestamp(3, new Timestamp(new java.util.Date().getTime()));
+    			preparedStmt.setLong(4, user.getId());
 
-			try {
-				preparedStmt.execute();
-			}
-			catch (SQLIntegrityConstraintViolationException  e) {
-				LOGGER.error("categories table insertion failed");
-				e.printStackTrace();
-			}
+    			try {
+    				preparedStmt.execute();
+    			}
+    			catch (SQLIntegrityConstraintViolationException  e) {
+    				LOGGER.error("categories table insertion failed");
+    				e.printStackTrace();
+    			}
 
-			//Enable foreign key checks
-			Statement enableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
-			enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+    			//Enable foreign key checks
+    			Statement enableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
+    			enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
 
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-        //***END Shadow write to mysql***
+    		} catch (SQLException e) {
+    			e.printStackTrace();
+    		}
+            //***END Shadow write to mysql***
+        }
+        
         
         return persist(category);
     }
