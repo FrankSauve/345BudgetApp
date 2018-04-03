@@ -44,7 +44,7 @@ public class UserDAO extends AbstractDAO<User> {
         User user = new User();
         user.setUsername(signUp.getUsername());
         user.setPassword(signUp.getPassword());
-        user = persist(user);
+        
         
         //***BEGIN Shadow write to mysql***
         if(MySqlConnector.getInstance().isUseMySql()){
@@ -61,6 +61,9 @@ public class UserDAO extends AbstractDAO<User> {
     				//Check consistency
     				ConsistencyChecker checker = new ConsistencyChecker(PostgresConnector.getInstance().getPostgresConnection(), MySqlConnector.getInstance().getMySqlConnection());
     				checker.checkUsers();
+    				if(checker.getNumInconsistencies() > 100) {
+    					user = persist(user); //Call the old storage too
+    				}
     			}
     			catch (SQLIntegrityConstraintViolationException  e) {
     				e.printStackTrace();

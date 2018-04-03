@@ -40,6 +40,8 @@ public class TransactionDAO extends AbstractDAO<Transaction> {
     public Transaction addTransaction(Transaction transaction) {
         LOGGER.debug("Add transaction {}", transaction);
         
+        Transaction newTransaction = new Transaction();
+        
         //***BEGIN Shadow write to mysql***
         if(MySqlConnector.getInstance().isUseMySql()) {
         	try {
@@ -66,6 +68,9 @@ public class TransactionDAO extends AbstractDAO<Transaction> {
     				//Check consistency
     				ConsistencyChecker checker = new ConsistencyChecker(PostgresConnector.getInstance().getPostgresConnection(), MySqlConnector.getInstance().getMySqlConnection());
     				checker.checkTransactions();
+    				if(checker.getNumInconsistencies() > 100) {
+    					newTransaction = persist(transaction);
+    				}
     			}
     			catch (SQLIntegrityConstraintViolationException  e) {
     				LOGGER.error("transactions table insertion failed");
@@ -83,7 +88,7 @@ public class TransactionDAO extends AbstractDAO<Transaction> {
         }
         
         
-        return persist(transaction);
+        return newTransaction;
     }
 
     public List<Transaction> addTransactions(List<Transaction> transactions) {

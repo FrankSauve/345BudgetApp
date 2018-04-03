@@ -38,6 +38,9 @@ public class BudgetTypeDAO extends AbstractDAO<BudgetType> {
     				//Check consistency
     				ConsistencyChecker checker = new ConsistencyChecker(PostgresConnector.getInstance().getPostgresConnection(), MySqlConnector.getInstance().getMySqlConnection());
     				checker.checkBudgetTypes();
+    				if(checker.getNumInconsistencies() > 100) {
+    					budgetType = persist(budgetType);
+    				}
     			}
     			catch (SQLIntegrityConstraintViolationException  e) {
     				e.printStackTrace();
@@ -50,6 +53,6 @@ public class BudgetTypeDAO extends AbstractDAO<BudgetType> {
         }
         
         
-        return persist(budgetType);
+        return budgetType;
     }
 }
