@@ -5,6 +5,7 @@ import io.budgetapp.util.Util;
 import io.budgetapp.application.AccessDeniedException;
 import io.budgetapp.application.NotFoundException;
 import io.budgetapp.configuration.AppConfiguration;
+import io.budgetapp.database.MySqlConnector;
 import io.budgetapp.model.User;
 import io.dropwizard.hibernate.AbstractDAO;
 import org.hibernate.Criteria;
@@ -17,6 +18,11 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Date;
@@ -50,6 +56,47 @@ public class BudgetDAO extends AbstractDAO<Budget> {
             budget.setPeriod(Util.currentYearMonth());
         }
         budget.setUser(user);
+        
+        //***BEGIN Shadow write to mysql***
+        if(MySqlConnector.getInstance().isUseMySql()) {
+        	try {
+
+    			//Disable foreign key checks
+    			Statement disableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
+    			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
+
+    			// Inserting data
+    			String query = " INSERT INTO budgets (name, projected, actual, period_on, created_at, user_id, category_id, type_id)"
+    					+ " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    			PreparedStatement preparedStmt = MySqlConnector.getInstance().getMySqlConnection().prepareStatement(query);
+    			preparedStmt.setString(1, budget.getName());
+    			preparedStmt.setDouble(2, budget.getProjected());
+    			preparedStmt.setDouble(3, budget.getActual());
+    			preparedStmt.setDate(4, (java.sql.Date) budget.getPeriod());
+    			preparedStmt.setTimestamp(5, new Timestamp(new java.util.Date().getTime()));
+    			preparedStmt.setLong(6, user.getId());
+    			preparedStmt.setLong(7, budget.getCategory().getId());
+    			preparedStmt.setLong(8, budget.getBudgetType().getId());
+
+    			try {
+    				preparedStmt.execute();
+    			}
+    			catch (SQLIntegrityConstraintViolationException  e) {
+    				LOGGER.error("budgets table insertion failed");
+    				e.printStackTrace();
+    			}
+
+    			//Enable foreign key checks
+    			Statement enableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
+    			enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+
+    		} catch (SQLException e) {
+    			e.printStackTrace();
+    		}
+        }
+        
+        //***END Shadow write to mysql***
+        
         return persist(budget);
     }
 

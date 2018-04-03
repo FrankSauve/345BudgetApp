@@ -1,6 +1,7 @@
 package io.budgetapp.dao;
 
 import io.budgetapp.application.NotFoundException;
+import io.budgetapp.database.MySqlConnector;
 import io.budgetapp.model.Transaction;
 import io.budgetapp.model.User;
 import io.budgetapp.model.form.report.SearchFilter;
@@ -13,6 +14,11 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.Optional;
@@ -31,6 +37,47 @@ public class TransactionDAO extends AbstractDAO<Transaction> {
 
     public Transaction addTransaction(Transaction transaction) {
         LOGGER.debug("Add transaction {}", transaction);
+        
+        //***BEGIN Shadow write to mysql***
+        if(MySqlConnector.getInstance().isUseMySql()) {
+        	try {
+
+    			//Disable foreign key checks
+    			Statement disableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
+    			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
+
+    			// Inserting data 
+    			String query = " INSERT INTO recurrings (name, amount, remark, auto, transaction_on, created_at, budget_id, recurring_id)"
+    					+ " VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+    			PreparedStatement preparedStmt = MySqlConnector.getInstance().getMySqlConnection().prepareStatement(query);
+    			preparedStmt.setString(1, transaction.getName());
+    			preparedStmt.setDouble(2, transaction.getAmount());
+    			preparedStmt.setString(3, transaction.getRemark());
+    			preparedStmt.setBoolean(4, transaction.isAuto());
+    			preparedStmt.setTimestamp(5, (Timestamp) transaction.getTransactionOn());
+    			preparedStmt.setTimestamp(6,  new Timestamp(new java.util.Date().getTime()));
+    			preparedStmt.setLong(7, transaction.getBudget().getId());
+    			preparedStmt.setLong(8, transaction.getRecurring().getId());
+
+    			try {
+    				preparedStmt.execute();
+    			}
+    			catch (SQLIntegrityConstraintViolationException  e) {
+    				LOGGER.error("transactions table insertion failed");
+    				e.printStackTrace();
+    			}
+
+    			//Enable foreign key checks
+    			Statement enableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
+    			enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+
+    		} catch (SQLException e) {
+    			e.printStackTrace();
+    		}
+            //***END Shadow write to mysql***
+        }
+        
+        
         return persist(transaction);
     }
 

@@ -104,7 +104,7 @@ public class MigrationTest{
 	}
 
 
-	@Test
+	//@Test
 	public void migrationTest() {
 
 		// forklift the data from old storage to new 

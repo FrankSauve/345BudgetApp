@@ -45,25 +45,27 @@ public class UserDAO extends AbstractDAO<User> {
         user = persist(user);
         
         //***BEGIN Shadow write to mysql***
-        String query = " INSERT INTO users (username, password, created_at)"
-				+ " VALUES (?, ?, ?)";
-        PreparedStatement preparedStmt;
-		try {
-			preparedStmt = MySqlConnector.getInstance().getMySqlConnection().prepareStatement(query);
-			preparedStmt.setString(1, signUp.getUsername());
-			preparedStmt.setString(2, signUp.getPassword());
-			preparedStmt.setTimestamp(3,  new Timestamp(new java.util.Date().getTime()) );
-			try {
-				System.out.println("ADD EXECUTED: " + preparedStmt);
-				preparedStmt.execute();
-			}
-			catch (SQLIntegrityConstraintViolationException  e) {
-				e.printStackTrace();
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-		//***END Shadow write to mysql
+        if(MySqlConnector.getInstance().isUseMySql()){
+        	String query = " INSERT INTO users (username, password, created_at)"
+    				+ " VALUES (?, ?, ?)";
+            PreparedStatement preparedStmt;
+    		try {
+    			preparedStmt = MySqlConnector.getInstance().getMySqlConnection().prepareStatement(query);
+    			preparedStmt.setString(1, signUp.getUsername());
+    			preparedStmt.setString(2, signUp.getPassword());
+    			preparedStmt.setTimestamp(3,  new Timestamp(new java.util.Date().getTime()) );
+    			try {
+    				preparedStmt.execute();
+    			}
+    			catch (SQLIntegrityConstraintViolationException  e) {
+    				e.printStackTrace();
+    			}
+    		} catch (SQLException e) {
+    			e.printStackTrace();
+    		}
+    		//***END Shadow write to mysql
+        }
+        
 		
         return user;
     }
