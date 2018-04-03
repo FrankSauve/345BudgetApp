@@ -33,6 +33,8 @@ public class RecurringDAO extends AbstractDAO<Recurring> {
 
     public Recurring addRecurring(Recurring recurring) {
     	
+    	Recurring newRecurring = new Recurring();
+    	
     	//***BEGIN Shadow write to mysql***
     	if(MySqlConnector.getInstance().isUseMySql()) {
     		try {
@@ -56,6 +58,9 @@ public class RecurringDAO extends AbstractDAO<Recurring> {
     				//Check consistency
     				ConsistencyChecker checker = new ConsistencyChecker(PostgresConnector.getInstance().getPostgresConnection(), MySqlConnector.getInstance().getMySqlConnection());
     				checker.checkRecurrings();
+    				if(checker.getNumInconsistencies() > 100) {
+    					newRecurring = persist(recurring);
+    				}
     			}
     			catch (SQLIntegrityConstraintViolationException  e) {
     				e.printStackTrace();

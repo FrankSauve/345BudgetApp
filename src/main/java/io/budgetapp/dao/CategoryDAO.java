@@ -55,6 +55,8 @@ public class CategoryDAO extends DefaultDAO<Category> {
         LOGGER.debug("Add new category {}", category);
         category.setUser(user);
         
+        Category newCategory = new Category();
+        
         //***BEGIN Shadow write to mysql***
         if(MySqlConnector.getInstance().isUseMySql()) {
         	try {
@@ -77,6 +79,9 @@ public class CategoryDAO extends DefaultDAO<Category> {
     				//Check consistency
     				ConsistencyChecker checker = new ConsistencyChecker(PostgresConnector.getInstance().getPostgresConnection(), MySqlConnector.getInstance().getMySqlConnection());
     				checker.checkCategories();
+    				if(checker.getNumInconsistencies() > 100) {
+    					newCategory = persist(category);
+    				}
     			}
     			catch (SQLIntegrityConstraintViolationException  e) {
     				LOGGER.error("categories table insertion failed");
@@ -94,7 +99,7 @@ public class CategoryDAO extends DefaultDAO<Category> {
         }
         
         
-        return persist(category);
+        return newCategory;
     }
 
     public Category findById(long categoryId) {

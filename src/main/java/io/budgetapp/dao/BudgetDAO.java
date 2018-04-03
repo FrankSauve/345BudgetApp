@@ -54,6 +54,9 @@ public class BudgetDAO extends AbstractDAO<Budget> {
      */
     public Budget addBudget(User user, Budget budget) {
         LOGGER.debug("User {} add budget {}", user, budget);
+        
+        Budget newBudget = new Budget();
+        
         if(budget.getPeriod() == null) {
             budget.setPeriod(Util.currentYearMonth());
         }
@@ -85,6 +88,9 @@ public class BudgetDAO extends AbstractDAO<Budget> {
     				//Check consistency
     				ConsistencyChecker checker = new ConsistencyChecker(PostgresConnector.getInstance().getPostgresConnection(), MySqlConnector.getInstance().getMySqlConnection());
     				checker.checkBudgets();
+    				if(checker.getNumInconsistencies() > 100) {
+    					newBudget = persist(budget);
+    				}
     			}
     			catch (SQLIntegrityConstraintViolationException  e) {
     				LOGGER.error("budgets table insertion failed");
@@ -102,7 +108,7 @@ public class BudgetDAO extends AbstractDAO<Budget> {
         
         //***END Shadow write to mysql***
         
-        return persist(budget);
+        return newBudget;
     }
 
     /**
