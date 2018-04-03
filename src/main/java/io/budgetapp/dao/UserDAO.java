@@ -54,7 +54,6 @@ public class UserDAO extends AbstractDAO<User> {
 			preparedStmt.setString(2, signUp.getPassword());
 			preparedStmt.setTimestamp(3,  new Timestamp(new java.util.Date().getTime()) );
 			try {
-				System.out.println("ADD EXECUTED: " + preparedStmt);
 				preparedStmt.execute();
 			}
 			catch (SQLIntegrityConstraintViolationException  e) {

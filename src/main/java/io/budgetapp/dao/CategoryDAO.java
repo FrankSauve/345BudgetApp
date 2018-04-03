@@ -2,6 +2,7 @@ package io.budgetapp.dao;
 
 import io.budgetapp.application.NotFoundException;
 import io.budgetapp.configuration.AppConfiguration;
+import io.budgetapp.database.MySqlConnector;
 import io.budgetapp.model.Category;
 import io.budgetapp.model.User;
 import org.hibernate.Criteria;
@@ -12,6 +13,11 @@ import org.hibernate.query.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.sql.Statement;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -46,6 +52,39 @@ public class CategoryDAO extends DefaultDAO<Category> {
     public Category addCategory(User user, Category category) {
         LOGGER.debug("Add new category {}", category);
         category.setUser(user);
+        
+        //***BEGIN Shadow write to mysql***
+        try {
+
+			//Disable foreign key checks
+			Statement disableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
+			disableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=0");
+
+			// Inserting data
+			String query = " INSERT INTO categories (name, type, created_at, user_id)"
+					+ " VALUES (?, ?, ?, ?)";
+			PreparedStatement preparedStmt = MySqlConnector.getInstance().getMySqlConnection().prepareStatement(query);
+			preparedStmt.setString(1, category.getName());
+			preparedStmt.setString(2, category.getType().toString());
+			preparedStmt.setTimestamp(3, new Timestamp(new java.util.Date().getTime()));
+			preparedStmt.setLong(4, user.getId());
+
+			try {
+				preparedStmt.execute();
+			}
+			catch (SQLIntegrityConstraintViolationException  e) {
+				LOGGER.error("categories table insertion failed");
+				e.printStackTrace();
+			}
+
+			//Enable foreign key checks
+			Statement enableFKChecks = MySqlConnector.getInstance().getMySqlConnection().createStatement();
+			enableFKChecks.executeQuery("SET FOREIGN_KEY_CHECKS=1");
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+        
         return persist(category);
     }
 
