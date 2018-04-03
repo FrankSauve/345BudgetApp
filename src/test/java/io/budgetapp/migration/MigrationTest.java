@@ -5,6 +5,9 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import junit.framework.Assert;
+
 import org.junit.Test;
 
 
@@ -102,6 +105,34 @@ public class MigrationTest{
 		}
 
 	}
+	
+	private void shadowRead() {
+		
+		ShadowReader shadowReader = null;
+
+		try {
+			Connection conPostgres = DriverManager.getConnection(host1,username1,password1);
+			Connection conMySQL = DriverManager.getConnection(host2,username2,password2);
+
+			shadowReader = new ShadowReader(conPostgres, conMySQL);
+
+			shadowReader.connectToDatabases();
+			
+			//Shadow reads consistency checker for the db tables
+			shadowReader.shadowReadUser();
+			shadowReader.shadowReadBudget();
+			shadowReader.shadowReadCategories();
+			shadowReader.shadowReadRecurrings();
+			shadowReader.shadowReadBudgetType();
+			shadowReader.shadowReadTransactions();
+			
+			shadowReader.close();
+
+		} catch (SQLException e) {
+			e.printStackTrace();
+		}
+
+	}
 
 
 	//@Test
@@ -126,7 +157,8 @@ public class MigrationTest{
 		//shadow writes
 		shadowWrite();
 
-		// shadow reads for validation 
+		//shadow reads for validation
+		//shadowRead();
 
 
 	}

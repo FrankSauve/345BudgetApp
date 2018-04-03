@@ -41,6 +41,7 @@ public class ConsistencyChecker {
 	 */
 	public void checkUsers(){
 		LOGGER.info("***************Checking Users*****************");
+		
 		try {
 
 			Statement stmtPostgres = conPostgres.createStatement( );
@@ -76,7 +77,7 @@ public class ConsistencyChecker {
 				if(!username_Postgres.equals(username_MySQL)){
 					LOGGER.debug("username inconsistency: expected '"+username_Postgres+"' but received '"+username_MySQL+"'");
 					query+= " UPDATE users SET username = '"+username_Postgres+"' WHERE id = "+id_MySQL+";";
-					inconsistencies++;
+					inconsistencies ++;
 				}
 				if(!password_Postgres.equals(password_MySQL)){
 					LOGGER.debug("password inconsistency: expected '"+password_Postgres+"' but received '"+password_MySQL+"'");
@@ -673,6 +674,10 @@ public class ConsistencyChecker {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
+	}
+	
+	public void resetConsistencyChecker() {
+		inconsistencies = 0;
 	}
 
 

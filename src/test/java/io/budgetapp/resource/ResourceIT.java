@@ -136,11 +136,11 @@ public abstract class ResourceIT {
         assertThat(response.getStatus(), is(400));
     }
 
-    protected static String randomAlphabets() {
+    public static String randomAlphabets() {
         return UUID.randomUUID().toString().substring(0, 8);
     }
 
-    protected static String randomEmail() {
+    public static String randomEmail() {
         return randomAlphabets() + "@" + randomAlphabets() + ".com";
     }
 

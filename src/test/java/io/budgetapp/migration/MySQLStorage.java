@@ -18,9 +18,15 @@ public class MySQLStorage{
 	private static final Logger LOGGER = LoggerFactory.getLogger(MigrationTest.class);
 
 	private Connection conMySQL;
+	
+	int inconsistencies = 0;
 
 	MySQLStorage(Connection con){
 		conMySQL = con;
+	}
+	
+	public int getReadInconsistencies() {
+		return inconsistencies;
 	}
 
 	/**
