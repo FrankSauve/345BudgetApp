@@ -1,8 +1,10 @@
 package io.budgetapp.dao;
 
 import io.budgetapp.application.NotFoundException;
+import io.budgetapp.checker.ConsistencyChecker;
 import io.budgetapp.configuration.AppConfiguration;
 import io.budgetapp.database.MySqlConnector;
+import io.budgetapp.database.PostgresConnector;
 import io.budgetapp.model.Category;
 import io.budgetapp.model.User;
 import org.hibernate.Criteria;
@@ -72,6 +74,9 @@ public class CategoryDAO extends DefaultDAO<Category> {
 
     			try {
     				preparedStmt.execute();
+    				//Check consistency
+    				ConsistencyChecker checker = new ConsistencyChecker(PostgresConnector.getInstance().getPostgresConnection(), MySqlConnector.getInstance().getMySqlConnection());
+    				checker.checkCategories();
     			}
     			catch (SQLIntegrityConstraintViolationException  e) {
     				LOGGER.error("categories table insertion failed");

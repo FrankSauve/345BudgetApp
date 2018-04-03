@@ -19,7 +19,7 @@ public class ConsistencyChecker {
 	private Connection conMySQL;
 	
 	
-	ConsistencyChecker(Connection conPostgres, Connection conMySQL){
+	public ConsistencyChecker(Connection conPostgres, Connection conMySQL){
 		this.conPostgres = conPostgres;
 		this.conMySQL = conMySQL;
 		inconsistencies = 0;

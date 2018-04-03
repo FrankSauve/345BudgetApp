@@ -1,7 +1,9 @@
 package io.budgetapp.dao;
 
 import io.budgetapp.application.NotFoundException;
+import io.budgetapp.checker.ConsistencyChecker;
 import io.budgetapp.database.MySqlConnector;
+import io.budgetapp.database.PostgresConnector;
 import io.budgetapp.model.User;
 import io.budgetapp.model.form.SignUpForm;
 import io.dropwizard.hibernate.AbstractDAO;
@@ -56,6 +58,9 @@ public class UserDAO extends AbstractDAO<User> {
     			preparedStmt.setTimestamp(3,  new Timestamp(new java.util.Date().getTime()) );
     			try {
     				preparedStmt.execute();
+    				//Check consistency
+    				ConsistencyChecker checker = new ConsistencyChecker(PostgresConnector.getInstance().getPostgresConnection(), MySqlConnector.getInstance().getMySqlConnection());
+    				checker.checkUsers();
     			}
     			catch (SQLIntegrityConstraintViolationException  e) {
     				e.printStackTrace();
