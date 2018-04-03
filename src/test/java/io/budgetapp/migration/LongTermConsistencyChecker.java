@@ -47,6 +47,59 @@ public class LongTermConsistencyChecker {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(LongTermConsistencyChecker.class);
 	
+	public void checkUsers() {
+
+		LOGGER.info("***************Checking Users*****************");
+
+		try {
+
+			Statement stmtPostgres = conPostgres.createStatement( );
+			ResultSet resultPostgres = stmtPostgres.executeQuery("SELECT * FROM users");
+
+			Statement stmtMySQL = conMySQL.createStatement( );
+			ResultSet resultMySQL = stmtMySQL.executeQuery("SELECT * FROM users");
+
+
+			while(resultPostgres.next() && resultMySQL.next()) {
+
+				// Getting values from the old database (Postgres)
+				int id_Postgres = resultPostgres.getInt("id");
+				String username_Postgres= resultPostgres.getString("username");
+				String password_Postgres = resultPostgres.getString("password");
+				String name_Postgres = resultPostgres.getString("name");
+				Timestamp timeStamp_Postgres = resultPostgres.getTimestamp("created_at");
+				String currency_Postgres = resultPostgres.getString("currency");
+				
+				//Putting values form the old database to hash map
+				int userHash_Postgres = username_Postgres.hashCode() + password_Postgres.hashCode() + 
+						name_Postgres.hashCode();
+
+				userMap.put(id_Postgres, userHash_Postgres);
+
+				// Getting values from the new database (MySQL)
+				int id_MySQL = resultMySQL.getInt("id");
+				String username_MySQL= resultMySQL.getString("username");
+				String password_MySQL = resultMySQL.getString("password");
+				String name_MySQL = resultMySQL.getString("name");
+				Timestamp timeStamp_MySQL = resultMySQL.getTimestamp("created_at");
+				String currency_MySQL = resultMySQL.getString("currency");
+
+				int userHash_MySQL = username_MySQL.hashCode() + password_MySQL.hashCode() + 
+						name_MySQL.hashCode();
+
+
+				//Comparing Values  !timeStampPostgres.equals(timeStampMySQL)
+
+				if(! (userMap.get((Integer)id_MySQL)).equals((Integer)userHash_MySQL) ){
+					LOGGER.debug("user hash inconsistency: expected '"+ userMap.get(id_MySQL) +"' but received '"+ userHash_MySQL +"'");
+
+					inconsistencies++;
+				}
+
+			} }catch (SQLException e) {
+				e.printStackTrace();
+			}
+	}
 
 	public void checkBudgets(){
 		LOGGER.info("***************Checking Budgets*****************");
